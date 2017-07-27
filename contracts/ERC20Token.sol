@@ -1,52 +1,38 @@
 pragma solidity ^0.4.11;
 
-import "./ERC20TokenInterface.sol";
+// https://github.com/ethereum/EIPs/issues/20
+interface ERC20Token {
 
-/*
-	Copyright 2017, Skiral Inc
-*/
+	// Triggered when tokens are transferred.
+	event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-contract ERC20Token is ERC20TokenInterface {
+	// Triggered whenever approve(address _spender, uint256 _value) is called.
+	event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-	// State variables
-	mapping (address => uint256) public balanceOf;
-	string public name;		// The Token's name: e.g. Gilgamesh Tokens
-	string public symbol;
-	uint8 public decimal;	// Number of decimals of the smallest unit
-	uint256 public totalSupply;
+	// --------
+	//	Getters
+	// ---------
 
-	function ERC20Token(
-		uint256 initialSupply,
-		string tokenName,
-		string tokenSymbol,
-		uint8 decimalUnits
-	) {
-		// assign all tokens to the deployer
-		balanceOf[msg.sender] = initialSupply;
+	// Get the total token supply
+	function totalSupply() constant returns (uint256 totalSupply);
 
-		totalSupply =  initialSupply;
-		decimal = decimalUnits;
-		symbol = tokenSymbol;
-		name = tokenName;
-	}
+	 // Get the account balance of address `_owner`
+	function balanceOf(address _owner) constant returns (uint256 balance);
 
-	//--------------
-	// ERC20 Methods
-	//--------------
-	function transfer(address _to, uint _value) returns (bool success) {
-		// if sender has enough token
-		if (balanceOf[msg.sender] < _value) throw;
+	// Returns the amount which `_spender` is still allowed to withdraw from `_owner`
+	function allowance(address _owner, address _spender) constant returns (uint256 remaining);
 
-		// preventing overflow on the "to" account
-		if (balanceOf[_to] + _value < balanceOf[_to]) throw;
+	// --------
+	//	Actions
+	// ---------
 
-		// subtract tokens from the sender
-		balanceOf[msg.sender] -= _value;
+	 // Send `_value` amount of tokens to address `_to` from the invoker account
+	function transfer(address _to, uint256 _value) returns (bool success);
 
-		// add tokens to the receiver
-		balanceOf[_to] += _value;
+	// Send `_value` amount of tokens from address `_from` to address `_to`
+	function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
 
-		Transfer(msg.sender, _to, _value);
-		return true;
-	}
+	// Allow `_spender` to withdraw from your account, multiple times, up to the `_value` amount.
+	// If this function is called again it overwrites the current allowance with `_value`.
+	function approve(address _spender, uint256 _value) returns (bool success);
 }
