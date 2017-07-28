@@ -1,12 +1,11 @@
-pragma solidity 0.4.11;
-
-import "./ERC20Token.sol";
-import "./Admin.sol";
-
 /*
 	Copyright 2017, Skiral Inc
 */
-contract SecureERC20Token is Admin, ERC20Token {
+pragma solidity 0.4.11;
+
+import "./ERC20Token.sol";
+
+contract SecureERC20Token is ERC20Token {
 
 	// State variables
 
@@ -155,15 +154,22 @@ contract SecureERC20Token is Admin, ERC20Token {
 	// --------------
 
 	/* Public Methods */
-
+	
 	/// @notice only the admin is allowed to change the minter.
 	/// @param `_minter` the address of the minter
 	function changeMinter(address _minter) onlyAdmin {
 		minter = _minter;
 	}
 
+	/// @notice only the admin is allowed to change the admin.
+	/// @param `newAdmin` the address of the new admin
+	function changeAdmin(address newAdmin) onlyAdmin {
+		admin = newAdmin;
+	}
+
 	/// @notice mint new tokens by the minter
-	/// @
+	/// @param `_owner` the owner of the newly tokens
+	/// @param `_amount` the amount of new token to be minted
 	function mint(address _owner, uint256 _amount)
 	onlyMinter
 	returns (bool success) {
@@ -226,10 +232,20 @@ contract SecureERC20Token is Admin, ERC20Token {
 		return true;
 	}
 
+	// --------------
+	// Modifiers
+	// --------------
 	modifier onlyMinter() {
 		// if sender is not the minter stop the execution
 		if (msg.sender != minter) throw;
 		// if the sender is the minter continue
+		_;
+	}
+
+	modifier onlyAdmin() {
+		// if sender is not the admin stop the execution
+		if (msg.sender != admin) throw;
+		// if the sender is the admin continue
 		_;
 	}
 }
