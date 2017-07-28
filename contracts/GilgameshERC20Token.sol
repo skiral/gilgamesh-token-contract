@@ -1,11 +1,12 @@
 pragma solidity 0.4.11;
 
 import "./ERC20Token.sol";
+import "./Admin.sol";
 
 /*
 	Copyright 2017, Skiral Inc
 */
-contract GilgameshERC20Token is ERC20Token {
+contract GilgameshERC20Token is Admin, ERC20Token {
 
 	// State variables
 
@@ -30,8 +31,8 @@ contract GilgameshERC20Token is ERC20Token {
 	// token version
 	uint8 public version = 1;
 
-	// address of the contract creator
-	address public creator;
+	// address of the contract admin
+	address public admin;
 
 	// `creationBlock` is the block number that the Token was created
     uint public creationBlock;
@@ -148,8 +149,20 @@ contract GilgameshERC20Token is ERC20Token {
 	}
 
 	// --------------
-	// Contract Methods - Non ERC20
+	// Contract Custom Methods - Non ERC20
 	// --------------
+
+	/* Public Methods */
+
+	/// @notice Enables token holders to transfer their tokens freely if true
+	/// after the crowdsale is finished it will be true
+	/// for security reasons can be switched to false
+	/// @param _isTransferEnabled boolean
+	function enableTransfers(bool _isTransferEnabled) onlyAdmin {
+		isTransferEnabled = _isTransferEnabled;
+	}
+
+	/* Internal Methods */
 
 	///	@dev this is the actual transfer function and it can only be called internally
 	/// @notice send `_value` amount of tokens to `_to` address from `_from` address
@@ -182,23 +195,5 @@ contract GilgameshERC20Token is ERC20Token {
 
 		// transaction successful
 		return true;
-	}
-
-	/// @notice Enables token holders to transfer their tokens freely if true
-	/// after the crowdsale is finished it will be true
-	/// for security reasons can be switched to false
-	/// @param _isTransferEnabled boolean
-	function enableTransfers(bool _isTransferEnabled) onlyCreator {
-		isTransferEnabled = _isTransferEnabled;
-	}
-
-	// --------------
-	// Modifiers
-	// --------------
-	modifier onlyCreator() {
-		// if sender is not the creator stop the execution
-		if (msg.sender != creator) throw;
-		// if the sender is the creator continue
-		_;
 	}
 }
