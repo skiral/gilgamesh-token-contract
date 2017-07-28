@@ -1,3 +1,7 @@
+/*
+	Copyright 2017, Skiral Inc
+*/
+
 // https://github.com/ethereum/EIPs/issues/20
 
 // ERC20 compliant token interface
@@ -51,7 +55,8 @@ interface ERC20Token {
 	/// @return a boolean - whether the transfer was successful or not
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
 
-	/// @notice `msg.sender` approves `_spender` to spend `_value` tokens
+	/// @notice `msg.sender` approves `_spender` to spend multiple times up to `_value` amount of tokens
+	/// If this function is called again it overwrites the current allowance with _value.
 	/// @param `_spender` The address of the account able to transfer the tokens
 	/// @param `_value` The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
