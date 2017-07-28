@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "./ERC20Token.sol";
 
@@ -8,12 +8,15 @@ import "./ERC20Token.sol";
 contract GilgameshERC20Token is ERC20Token {
 
 	// State variables
+
+	// dictionary that maps addresses to balances.
 	mapping (address => uint256) public balanceOf;
 	string public name;		// The Token's name: e.g. Gilgamesh Tokens
 	string public symbol;
 	uint8 public decimal;	// Number of decimals of the smallest unit
 	uint256 public totalSupply;
 
+	// Constructor, can receive one or many variables here; only one allowed
 	function GilgameshERC20Token(
 		uint256 initialSupply,
 		string tokenName,
