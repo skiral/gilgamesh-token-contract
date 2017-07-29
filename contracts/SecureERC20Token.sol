@@ -34,7 +34,7 @@ contract SecureERC20Token is ERC20Token {
 	address public admin;
 
 	// `creationBlock` is the block number that the Token was created
-    uint public creationBlock;
+	uint256 public creationBlock;
 
 	// Flag that determines if the token is transferable or not
 	// disable actionable ERC20 token methods
@@ -154,7 +154,7 @@ contract SecureERC20Token is ERC20Token {
 	// --------------
 
 	/* Public Methods */
-	
+
 	/// @notice only the admin is allowed to change the minter.
 	/// @param `_minter` the address of the minter
 	function changeMinter(address _minter) onlyAdmin {
@@ -180,7 +180,7 @@ contract SecureERC20Token is ERC20Token {
 		if (balances[_owner] + _amount < balances[_owner]) throw;
 
 		// increase the total supply
-		totalSupply +=  _amount;
+		totalSupply += _amount;
 
 		// assign the additional supply to the target account.
 		balances[_owner] += _amount;
