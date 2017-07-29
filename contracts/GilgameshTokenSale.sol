@@ -160,14 +160,13 @@ contract GilgameshTokenSale is SafeMath{
 	only_during_sale_period
 	only_sale_stopped
 	onlyOwner {
-			saleStopped = false;
+		saleStopped = false;
 	}
 
 	function changeFundOwnerWalletAddress(address _fundOwnerWallet)
 	public
 	validate_address(_fundOwnerWallet)
 	onlyOwner {
-
 		fundOwnerWallet = _fundOwnerWallet;
 	}
 

@@ -1,9 +1,29 @@
+# Smart Contract best practices
+References:
+ - https://github.com/ConsenSys/smart-contract-best-practices
+ - https://learnxinyminutes.com/docs/solidity/
+
+### Best Practices
 - use `this` to invoke external functions `this.f()`
 - all state variables have a `getter` function by default
 - use require for assertion
 - all getter method should be `constant`
+-  is better to let users withdraw funds rather than push funds to them automatically
+- Race condition:
+    We have recommended finishing all internal work first, and only then calling the external function
+    and avoid calling functions which call external functions
 
+In `for (var i = 0; i < arrayName.length; i++) { ... }`, the type of `i` will be `uint8`, because this is the smallest type that is required to hold the value `0`. If the array has more than `255` elements, the loop will not terminate.
 
+### Function Visibility specifiers
+ These can be placed where 'constant' is, including:
+- public - visible externally and internally (default)
+- external
+- private - only visible in the current contract
+- internal - only visible in current contract, and those deriving from it
+
+### Snippet code to listen event logs with JavaScript
+```sh
 pragma solidity ^0.4.0;
 
 contract ClientReceipt {
@@ -42,3 +62,4 @@ var event = clientReceipt.Deposit(function(error, result) {
     if (!error)
         console.log(result);
 });
+```
