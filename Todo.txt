@@ -1,0 +1,9 @@
+1. ERC20 token interface
+2. implement ERC20 token methods.
+	- make sure tokens are non transferrable in the beginning.
+	- get inspired from Aragon
+	- get inspired from video
+3. implement Crowd fund.
+4. write unit test.
+5. read solitidy best practices.
+6. research 0x0 validation
