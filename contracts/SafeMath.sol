@@ -25,6 +25,4 @@ contract SafeMath {
 		assert(a == b * c + a % b);
 		return c;
 	}
-
-
 }

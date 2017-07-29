@@ -51,7 +51,7 @@ var event = clientReceipt.Deposit();
 // watch for changes
 event.watch(function(error, result){
     // result will contain various information
-    // including the argumets given to the Deposit
+    // including the arguments given to the Deposit
     // call.
     if (!error)
         console.log(result);

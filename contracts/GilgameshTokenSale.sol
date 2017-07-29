@@ -60,6 +60,8 @@ contract GilgameshTokenSale is SafeMath{
 	// The token
 	GilgameshToken public token;
 
+	bool public isCapReached = false;
+
 	struct Contribution {
 		uint256 amount;
 		address contributor;
@@ -185,6 +187,7 @@ contract GilgameshTokenSale is SafeMath{
 		hardCap = _cap;
 
 		if (totalRaised + minimumInvestment >= hardCap) {
+			isCapReached = true;
 			doFinalizeSale();
 		}
 	}
@@ -333,6 +336,8 @@ contract GilgameshTokenSale is SafeMath{
 		if (saleFinalized) throw;
 		// if sale is stopped fail
 		if (saleStopped) throw;
+		// if cap is reached
+		if (isCapReached) throw;
 		// if block number is less than starting block fail
 		if (block.number < startBlock) throw;
 		// if block number has reach to the end block fail

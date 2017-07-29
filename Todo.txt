@@ -5,5 +5,5 @@
 	- get inspired from video
 3. implement Crowd fund.
 4. write unit test.
-5. read solitidy best practices.
+5. read Solidity best practices.
 6. research 0x0 validation
