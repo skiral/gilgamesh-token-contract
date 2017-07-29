@@ -40,8 +40,8 @@ contract GilgameshTokenSale is SafeMath{
 	// `fundOwnerWallet` the deposit address for the `Eth` that is raised.
 	address public fundOwnerWallet;
 
-	// `creator` the address of the contract depoloyer
-	address public creator;
+	// `owner` the address of the contract depoloyer
+	address public owner;
 
 	// `stageBonusPercentage`
 	uint[] public stageBonusPercentage;
@@ -60,8 +60,16 @@ contract GilgameshTokenSale is SafeMath{
 	// The token
 	GilgameshToken public token;
 
+	struct Contribution {
+		uint256 amount;
+		address contributor;
+		uint256 blockNumber;
+	}
+
+	Contribution[] contributions;
+
 	event LogTokenSaleInitialized(
-		address creator,
+		address owner,
 		address fundOwnerWallet,
 		uint256 startBlock,
 		uint256 endBlock
@@ -101,7 +109,7 @@ contract GilgameshTokenSale is SafeMath{
 		// stage bonus percentage needs to be devisible by number of stages
 		if (_stageMaxBonusPercentage % _totalStages != 0) throw;
 
-		creator = msg.sender;
+		owner = msg.sender;
 		fundOwnerWallet = _fundOwnerWallet;
 		startBlock = _startBlock;
 		endBlock = _endBlock;
@@ -125,7 +133,7 @@ contract GilgameshTokenSale is SafeMath{
 		}
 
 		LogTokenSaleInitialized(
-			creator,
+			owner,
 			fundOwnerWallet,
 			startBlock,
 			endBlock
@@ -139,48 +147,56 @@ contract GilgameshTokenSale is SafeMath{
 	// @notice Function to stop sale for an emergency.
 	// @dev Only Gilgamesh Dev can do it after it has been activated.
 	function emergencyStopSale()
-		only_sale_active
-		only(creator)
-		public {
+	public
+	only_sale_active
+	onlyOwner {
 		saleStopped = true;
 	}
 
 	// @notice Function to restart stopped sale.
 	// @dev Only Gilgamesh Dev can do it after it has been disabled and sale is ongoing.
 	function restartSale()
-		only_during_sale_period
-		only_sale_stopped
-		only(creator)
-		public {
+	public
+	only_during_sale_period
+	only_sale_stopped
+	onlyOwner {
 			saleStopped = false;
 	}
 
 	function changeFundOwnerWalletAddress(address _fundOwnerWallet)
-		validate_address(_fundOwnerWallet)
-		only(owner)
-		public {
+	public
+	validate_address(_fundOwnerWallet)
+	onlyOwner {
 
 		fundOwnerWallet = _fundOwnerWallet;
 	}
 
 	function finalizeSale()
-	only(owner)
-	public {
+	public
+	onlyOwner {
 		doFinalizeSale();
 	}
 
 	function changeCap(uint256 _cap)
-	only(owner)
-	public {
+	public
+	onlyOwner {
 		if (_cap >= hardCap) throw;
 		if (_cap < minimumCap) throw;
-		
+
 		hardCap = _cap;
 
 		if (totalRaised + minimumInvestment >= hardCap) {
 			doFinalizeSale();
 		}
 	}
+
+	function removeContract()
+	public
+	onlyOwner {
+		if (!saleFinalized) throw;
+		selfdestruct(msg.sender);
+	}
+
 
 
 	/// @dev The fallback function is called when ether is sent to the contract, it
@@ -199,10 +215,10 @@ contract GilgameshTokenSale is SafeMath{
 	///	contract receives to the gilgameshFund and creates tokens in the address of the
 	///	@param _owner The address that will hold the newly created tokens
 	function doPayment(address _owner)
+	internal
 	only_sale_active
 	minimum_contribution()
-	validate_address(_owner)
-	internal {
+	validate_address(_owner) {
 		// if it passes hard cap throw
 		if (totalRaised + msg.value > hardCap) throw;
 
@@ -216,6 +232,14 @@ contract GilgameshTokenSale is SafeMath{
 
 		// mint tokens for the user
 		if (!token.mint(msg.sender, userTokens)) throw;
+
+		contributions.push(
+			Contribution({
+				amount: msg.value,
+				contributor: msg.sender,
+				blockNumber: block.number
+			})
+		);
 
 		// save total number wei raised
 		totalRaised = safeAdd(totalRaised, msg.value);
@@ -264,12 +288,17 @@ contract GilgameshTokenSale is SafeMath{
 	}
 
 	function doFinalizeSale()
-	only(owner)
-	internal {
+	internal
+	onlyOwner {
 		uint256 teamTokens = safeMul(token.totalSupply(), teamTokenRatio);
 
 		// mint tokens for the team
-		if (!token.mint(creator, teamTokens)) throw;
+		if (!token.mint(owner, teamTokens)) throw;
+
+		if(this.balance > 0) {
+			// send funds to fund owner wallet
+			if (!fundOwnerWallet.send(this.balance)) throw;
+		}
 
 		saleFinalized = true;
 		saleStopped = true;
@@ -318,8 +347,8 @@ contract GilgameshTokenSale is SafeMath{
 		_;
 	}
 
-	modifier only(address x) {
-		if (msg.sender != x) throw;
+	modifier onlyOwner() {
+		if (msg.sender != owner) throw;
 		_;
 	}
 }
