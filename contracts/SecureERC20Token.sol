@@ -9,10 +9,10 @@ contract SecureERC20Token is ERC20Token {
 
 	// State variables
 
-	// `balances` dictionary that maps addresses to balances
+	// balances dictionary that maps addresses to balances
 	mapping (address => uint256) private balances;
 
-	 // `allowed` dictionary that allow transfer rights to other addresses.
+	 // allowed dictionary that allow transfer rights to other addresses.
 	mapping (address => mapping(address => uint256)) private allowed;
 
 	// The Token's name: e.g. 'Gilgamesh Tokens'
@@ -33,7 +33,10 @@ contract SecureERC20Token is ERC20Token {
 	// address of the contract admin
 	address public admin;
 
-	// `creationBlock` is the block number that the Token was created
+	// address of the contract minter
+	address public minter;
+
+	// creationBlock is the block number that the Token was created
 	uint256 public creationBlock;
 
 	// Flag that determines if the token is transferable or not
@@ -70,16 +73,16 @@ contract SecureERC20Token is ERC20Token {
 		return totalSupply;
 	}
 
-	/// @notice Get the account balance of address `_owner`
-	/// @param `_owner` The address from which the balance will be retrieved
+	/// @notice Get the account balance of address _owner
+	/// @param _owner The address from which the balance will be retrieved
 	/// @return The balance
 	function balanceOf(address _owner) constant returns (uint256 balance) {
 		return balances[_owner];
 	}
 
-	/// @notice send `_value` amount of tokens to `_to` address from `msg.sender` address
-	/// @param `_to` The address of the recipient
-	/// @param `_value` The amount of token to be transferred
+	/// @notice send _value amount of tokens to _to address from msg.sender address
+	/// @param _to The address of the recipient
+	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
 	function transfer(address _to, uint256 _value) returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
@@ -89,48 +92,48 @@ contract SecureERC20Token is ERC20Token {
 		return doTransfer(msg.sender, _to, _value);
 	}
 
-	/// @notice send `_value` amount of tokens to `_to` address from `_from` address, on the condition it is approved by `_from`
-	/// @param `_from` The address of the sender
-	/// @param `_to` The address of the recipient
-	/// @param `_value` The amount of token to be transferred
+	/// @notice send _value amount of tokens to _to address from _from address, on the condition it is approved by _from
+	/// @param _from The address of the sender
+	/// @param _to The address of the recipient
+	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
-		// if `from` allowed transferrable rights to `sender` for amount `_value`
+		// if from allowed transferrable rights to sender for amount _value
 		if (allowed[_from][msg.sender] < _value) throw;
 
 		// subtreact allowance
-		allowed[_from][msg.sender] -= _amount;
+		allowed[_from][msg.sender] -= _value;
 
 		// continue with transfer
 		return doTransfer(_from, _to, _value);
 	}
 
-	/// @notice `msg.sender` approves `_spender` to spend `_value` tokens
-	/// @param `_spender` The address of the account able to transfer the tokens
-	/// @param `_value` The amount of tokens to be approved for transfer
+	/// @notice msg.sender approves _spender to spend _value tokens
+	/// @param _spender The address of the account able to transfer the tokens
+	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
 	function approve(address _spender, uint256 _value) returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
-		// user can only reassign an allowance of `0` if value is greater than `0`
-		// sender should first change the allowance to zero by calling `approve(_spender, 0)`
+		// user can only reassign an allowance of 0 if value is greater than 0
+		// sender should first change the allowance to zero by calling approve(_spender, 0)
 		// race condition is explained below:
 		// https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
 		if(_value != 0 && allowed[msg.sender][_spender] != 0) throw;
 
 		if (
-			// if sender balance is less than `_value` return false;
+			// if sender balance is less than _value return false;
 			balances[msg.sender] < _value
 		) {
 			// transaction failure
 			return false;
 		}
 
-		// allow transfer rights from `msg.sender` to `_spender` for `_value` token amount
+		// allow transfer rights from msg.sender to _spender for _value token amount
 		allowed[msg.sender][_spender] = _value;
 
 		// log approval event
@@ -140,9 +143,9 @@ contract SecureERC20Token is ERC20Token {
 		return true;
 	}
 
-	/// @param `_owner` The address of the account owning tokens
-	/// @param `_spender` The address of the account able to transfer the tokens
-	/// @return Amount of remaining tokens allowed to spent by the `_spender` from `_owner` account
+	/// @param _owner The address of the account owning tokens
+	/// @param _spender The address of the account able to transfer the tokens
+	/// @return Amount of remaining tokens allowed to spent by the _spender from _owner account
 	function allowance(address _owner, address _spender)
 	constant
 	returns (uint256 remaining) {
@@ -156,24 +159,26 @@ contract SecureERC20Token is ERC20Token {
 	/* Public Methods */
 
 	/// @notice only the admin is allowed to change the minter.
-	/// @param `_minter` the address of the minter
-	function changeMinter(address _minter) onlyAdmin {
-		minter = _minter;
+	/// @param newMinter the address of the minter
+	function changeMinter(address newMinter) onlyAdmin {
+		if (minter == newMinter) throw;
+		minter = newMinter;
 	}
 
 	/// @notice only the admin is allowed to change the admin.
-	/// @param `newAdmin` the address of the new admin
+	/// @param newAdmin the address of the new admin
 	function changeAdmin(address newAdmin) onlyAdmin {
+		if (admin == newAdmin) throw;
 		admin = newAdmin;
 	}
 
 	/// @notice mint new tokens by the minter
-	/// @param `_owner` the owner of the newly tokens
-	/// @param `_amount` the amount of new token to be minted
+	/// @param _owner the owner of the newly tokens
+	/// @param _amount the amount of new token to be minted
 	function mint(address _owner, uint256 _amount)
 	onlyMinter
 	returns (bool success) {
-		// preventing overflow on the `totalSupply`
+		// preventing overflow on the totalSupply
 		if (totalSupply + _amount < totalSupply) throw;
 
 		// preventing overflow on the receiver account
@@ -187,6 +192,8 @@ contract SecureERC20Token is ERC20Token {
 
 		// contract has transfered token to the target account
 		Transfer(this, _owner, _amount);
+
+		return true;
 	}
 
 	/// @notice Enables token holders to transfer their tokens freely if true
@@ -200,18 +207,18 @@ contract SecureERC20Token is ERC20Token {
 	/* Internal Methods */
 
 	///	@dev this is the actual transfer function and it can only be called internally
-	/// @notice send `_value` amount of tokens to `_to` address from `_from` address
-	/// @param `_to` The address of the recipient
-	/// @param `_value` The amount of token to be transferred
+	/// @notice send _value amount of tokens to _to address from _from address
+	/// @param _to The address of the recipient
+	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function doTransfer(address _from, address _to, uint256 value)
+	function doTransfer(address _from, address _to, uint256 _value)
 	internal
 	returns (bool success) {
 		if (
 			// if the value is not more than 0 fail
 			_value <= 0 ||
 			// if the sender doesn't have enough balance fail
-			balances[msg.sender] < _value ||
+			balances[_from] < _value ||
 			// if token supply overflows (total supply exceeds 2^256 - 1) fail
 			balances[_to] + _value < balances[_to]
 		) {
@@ -219,14 +226,14 @@ contract SecureERC20Token is ERC20Token {
 			return false;
 		}
 
-		// decrease the number of tokens from `sender` address.
-		balances[msg.sender] -= _value;
+		// decrease the number of tokens from sender address.
+		balances[_from] -= _value;
 
-		// increase the number of tokens for `_to` address
+		// increase the number of tokens for _to address
 		balances[_to] += _value;
 
 		// log transfer event
-		Transfer(msg.sender, _to, _value);
+		Transfer(_from, _to, _value);
 
 		// transaction successful
 		return true;
