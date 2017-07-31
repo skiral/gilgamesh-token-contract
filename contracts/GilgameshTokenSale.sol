@@ -129,6 +129,7 @@ contract GilgameshTokenSale is SafeMath{
 		token = GilgameshToken(_gilgameshToken);
 		endBlock = _endBlock;
 		startBlock = _startBlock;
+		creationBlock = block.number;
 		fundOwnerWallet = _fundOwnerWallet;
 		tokenPrice = _tokenPrice;
 		totalStages = _totalStages;
@@ -139,9 +140,9 @@ contract GilgameshTokenSale is SafeMath{
 		// spread bonuses evenly between stages - e.g 20 / 4 = 5%
 		uint spread = stageMaxBonusPercentage / (totalStages - 1);
 
-		// loop through [4 to 0] * 5% = [20%, 15%, 10%, 5%, 0%]
-		for (uint stageNumber = totalStages - 1; stageNumber >= 0; stageNumber--) {
-			stageBonusPercentage.push(stageNumber * spread);
+		// loop through [5 to 1] - ( 4 to 0) * 5% = [20%, 15%, 10%, 5%, 0%]
+		for (uint stageNumber = totalStages; stageNumber > 0; stageNumber--) {
+			stageBonusPercentage.push((stageNumber - 1) * spread);
 		}
 
 		LogTokenSaleInitialized(
