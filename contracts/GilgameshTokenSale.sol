@@ -221,29 +221,33 @@ contract GilgameshTokenSale is SafeMath{
 	/// @param `newOwner` the address of the new owner
 	function changeOwner(address newOwner)
 	onlyOwner {
+		require(_newOwner != owner);
 		owner = newOwner;
 	}
 
 	/// @dev The fallback function is called when ether is sent to the contract, it
-	/// simply calls `doPayment()` with the address that sent the ether as the
+	/// simply calls `deposit()` with the address that sent the ether as the
 	/// `_owner`.
 	/// Payable is a required solidity modifier to receive ether
+	/// every contract only has one unnamed function
+	/// 2300 gas available for this function
 	function () public payable {
-		return doPayment(msg.sender);
+		return deposit();
 	}
 
 	// --------------
 	// Internal Funtions
 	// --------------
 
-	///	@dev `doPayment()` is an internal function that sends the ether that this
+	///	@dev `deposit()` is an internal function that sends the ether that this
 	///	contract receives to the `gilgameshFund` and creates tokens in the address of the
 	///	@param _owner The address that will hold the newly created tokens
-	function doPayment(address _owner)
-	internal
+	function deposit()
+	public
+	payable
 	only_sale_active
 	minimum_contribution()
-	validate_address(_owner) {
+	validate_address(msg.sender) {
 		// if it passes hard cap throw
 		if (totalRaised + msg.value > hardCap) throw;
 
@@ -388,9 +392,9 @@ contract GilgameshTokenSale is SafeMath{
 	}
 
 
-	/// continue only when the address is valid
+	/// validates an address - currently only checks that it isn't null
 	modifier validate_address(address _address) {
-		if (_address == 0) throw;
+		if (_address == 0x0) throw;
 		_;
 	}
 
