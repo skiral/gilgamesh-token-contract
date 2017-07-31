@@ -15,6 +15,7 @@ contract GilgameshTokenSale is SafeMath{
 	uint256 public startBlock;
 
 	// `endBlock` token sale ending block
+	// end block is not a valid block for crowdfunding. `endBlock - 1` is the last valid block
 	uint256 public endBlock;
 
 	// total Wei rasised
@@ -37,18 +38,20 @@ contract GilgameshTokenSale is SafeMath{
 
 	/* Contract Info */
 
-	// `fundOwnerWallet` the deposit address for the `Eth` that is raised.
+	// the deposit address for the `Eth` that is raised.
 	address public fundOwnerWallet;
 
 	// `owner` the address of the contract depoloyer
 	address public owner;
 
-	// `stageBonusPercentage`
+	// List of stage bonus percentages in every stage
+	// this will get generated in the constructor
 	uint[] public stageBonusPercentage;
 
-	// `totalStages`
+	// total number of bonus stages.
 	uint8 public totalStages;
 
+	//  max bonus percentage on first stage
 	uint8 public stageMaxBonusPercentage;
 
 	// price of token per wei
@@ -57,19 +60,24 @@ contract GilgameshTokenSale is SafeMath{
 	// the team owns 80% of the tokens - 4 times more than investors.
 	uint8 public teamTokenRatio = 4;
 
-	// The token
+	// gilgamesh token
 	GilgameshToken public token;
 
+	// if investment cap has been reached
 	bool public isCapReached = false;
 
+	// Contribution structor to store fund contributions
 	struct Contribution {
-		uint256 amount;
-		address contributor;
-		uint256 blockNumber;
+		uint256 amount;				// amount that investor has contributed
+		address contributor;		// address of the investor contributor
+		uint256 blockNumber;		// block number when the contribution occured
+		uint256 userAssignedTokens;	// number of tokens transferred to the user
 	}
 
+	// list of contributions
 	Contribution[] contributions;
 
+	// log when token sale has been initialized
 	event LogTokenSaleInitialized(
 		address owner,
 		address fundOwnerWallet,
@@ -77,59 +85,61 @@ contract GilgameshTokenSale is SafeMath{
 		uint256 endBlock
 	);
 
+	// log each contribution
 	event LogContribution(
 		address contributorAddress,
 		uint265 amount,
-		uint256 totalRaised
+		uint256 totalRaised,
+		uint256 userAssignedTokens
 	);
 
+	// log when crowd fund is finalized
 	event LogFinalized(uint256 teamTokens);
 
 	// Constructor
 	function GilgameshTokenSale(
-		uint256 _startBlock,
-		uint256 _endBlock,
-		address _fundOwnerWallet,
-		uint8 _totalStages,
-		uint8 _stageMaxBonusPercentage,
-		uint256 _tokenPrice,
-		address _gilgameshToken,
-		uint256 _minimumCap
+		uint256 _startBlock,				// starting block number
+		uint256 _endBlock,					// ending block number
+		address _fundOwnerWallet,			// fund owner wallet address - transfer ether to this address after fund has been closed
+		uint8 _totalStages,					// total number of bonus stages
+		uint8 _stageMaxBonusPercentage,		// maximum percentage for bonus in the first stage
+		uint256 _tokenPrice,				// price of each token in `wei`
+		address _gilgameshToken,			// address of the gilgamesh ERC20 token contract
+		uint256 _minimumCap					// minimum cap, minimum amount of `wei` to be raised
 	)
 	validate_address(_fundOwnerWallet)
 	validate_address(_gilgameshToken) {
-		// start block needs to be in the future
-		if (_startBlock < block.number) throw;
 
-		// start block should be less than ending block
-		if (_startBlock >= _endBlock) throw;
-
-		if (_totalStages < 2) throw;
-
-		if(_stageMaxBonusPercentage <= 0 ) throw;
-
-		// stage bonus percentage needs to be devisible by number of stages
-		if (_stageMaxBonusPercentage % _totalStages != 0) throw;
+		if (
+			// start block needs to be in the future
+			_startBlock < block.number ||
+			// start block should be less than ending block
+			_startBlock >= _endBlock ||
+			// minimum number of stages
+			_totalStages < 2 ||
+			// verify stage max bonus
+			_stageMaxBonusPercentage <= 0  ||
+			// stage bonus percentage needs to be devisible by number of stages
+			_stageMaxBonusPercentage % _totalStages != 0
+			// total number of blocks needs to be devisible by the total stages
+			(_endBlock - _startBlock - 1) % _totalStages != 0
+		) throw;
 
 		owner = msg.sender;
-		fundOwnerWallet = _fundOwnerWallet;
-		startBlock = _startBlock;
-		endBlock = _endBlock;
 		token = GilgameshToken(_gilgameshToken);
-
+		endBlock = _endBlock;
+		startBlock = _startBlock;
+		fundOwnerWallet = _fundOwnerWallet;
 		tokenPrice = _tokenPrice;
-		totalRaised = 0;
 		totalStages = _totalStages;
-		stageMaxBonusPercentage = _stageMaxBonusPercentage;
 		minimumCap = _minimumCap;
+		stageMaxBonusPercentage = _stageMaxBonusPercentage;
+		totalRaised = 0; //	total number of `wei` raised
 
 		// spread bonuses evenly between stages - e.g 20 / 4 = 5%
-		// e.g
-		// stageMaxBonusPercentage = 80
-		// totalStages = 5
-		// spread = 20
-		// stageBonusPercentage [80, 66, 40, 20, 0]
 		uint spread = stageMaxBonusPercentage / (totalStages - 1);
+
+		// loop through [4 to 0] * 5% = [20%, 15%, 10%, 5%, 0%]
 		for (uint stageNumber = totalStages - 1; stageNumber >= 0; stageNumber--) {
 			stageBonusPercentage.push(stageNumber * spread);
 		}
@@ -146,8 +156,8 @@ contract GilgameshTokenSale is SafeMath{
 	// Public Funtions
 	// --------------
 
-	// @notice Function to stop sale for an emergency.
-	// @dev Only Gilgamesh Dev can do it after it has been activated.
+	/// @notice Function to stop sale for an emergency.
+	/// @dev Only Gilgamesh Dev can do it after it has been activated.
 	function emergencyStopSale()
 	public
 	only_sale_active
@@ -155,8 +165,8 @@ contract GilgameshTokenSale is SafeMath{
 		saleStopped = true;
 	}
 
-	// @notice Function to restart stopped sale.
-	// @dev Only Gilgamesh Dev can do it after it has been disabled and sale is ongoing.
+	/// @notice Function to restart stopped sale.
+	/// @dev Only Gilgamesh Dev can do it after it has been disabled and sale is ongoing.
 	function restartSale()
 	public
 	only_during_sale_period
@@ -165,6 +175,8 @@ contract GilgameshTokenSale is SafeMath{
 		saleStopped = false;
 	}
 
+	/// @notice Function to change the fund owner wallet address
+	/// @dev Only Gilgamesh Dev can trigger this function
 	function changeFundOwnerWalletAddress(address _fundOwnerWallet)
 	public
 	validate_address(_fundOwnerWallet)
@@ -172,12 +184,15 @@ contract GilgameshTokenSale is SafeMath{
 		fundOwnerWallet = _fundOwnerWallet;
 	}
 
+	/// @notice finalize the sale
+	/// @dev Only Gilgamesh Dev can trigger this function
 	function finalizeSale()
 	public
 	onlyOwner {
 		doFinalizeSale();
 	}
 
+	/// @notice change hard cap and if it reaches hard cap finalize sale
 	function changeCap(uint256 _cap)
 	public
 	onlyOwner {
@@ -192,6 +207,9 @@ contract GilgameshTokenSale is SafeMath{
 		}
 	}
 
+	/// @notice remove conttact only when sale has been finalized
+	/// transfer all the fund to the contract owner
+	/// @dev only Gilgamesh Dev can trigger this function
 	function removeContract()
 	public
 	onlyOwner {
@@ -199,12 +217,17 @@ contract GilgameshTokenSale is SafeMath{
 		selfdestruct(msg.sender);
 	}
 
-
+	/// @notice only the owner is allowed to change the owner.
+	/// @param `newOwner` the address of the new owner
+	function changeOwner(address newOwner)
+	onlyOwner {
+		owner = newOwner;
+	}
 
 	/// @dev The fallback function is called when ether is sent to the contract, it
 	/// simply calls `doPayment()` with the address that sent the ether as the
-	/// `_owner`. Payable is a required solidity modifier for functions to receive
-	/// ether, without this modifier functions will throw if ether is sent to them
+	/// `_owner`.
+	/// Payable is a required solidity modifier to receive ether
 	function () public payable {
 		return doPayment(msg.sender);
 	}
@@ -214,7 +237,7 @@ contract GilgameshTokenSale is SafeMath{
 	// --------------
 
 	///	@dev `doPayment()` is an internal function that sends the ether that this
-	///	contract receives to the gilgameshFund and creates tokens in the address of the
+	///	contract receives to the `gilgameshFund` and creates tokens in the address of the
 	///	@param _owner The address that will hold the newly created tokens
 	function doPayment(address _owner)
 	internal
@@ -224,87 +247,133 @@ contract GilgameshTokenSale is SafeMath{
 		// if it passes hard cap throw
 		if (totalRaised + msg.value > hardCap) throw;
 
-		uint256 userTokens = calculateTokens(msg.value);
+		uint256 userAssignedTokens = calculateTokens(msg.value);
 
 		// if user tokens are 0 throw
-		if (userTokens <= 0) throw;
+		if (userAssignedTokens <= 0) throw;
 
 		// send funds to fund owner wallet
 		if (!fundOwnerWallet.send(msg.value)) throw;
 
 		// mint tokens for the user
-		if (!token.mint(msg.sender, userTokens)) throw;
+		if (!token.mint(msg.sender, userAssignedTokens)) throw;
 
+		// create a new contribution object
 		contributions.push(
 			Contribution({
 				amount: msg.value,
 				contributor: msg.sender,
-				blockNumber: block.number
+				blockNumber: block.number,
+				userAssignedTokens: userAssignedTokens
 			})
 		);
 
 		// save total number wei raised
 		totalRaised = safeAdd(totalRaised, msg.value);
 
+		// if cap is reached mark it
 		if (totalRaied >= hardCap) {
 			isCapReached = true;
 		}
 
-		LogContribution(msg.sender, msg.value, totalRaised);
+		// log contribution event
+		LogContribution(
+			msg.sender,
+			msg.value,
+			totalRaised,
+			userAssignedTokens
+		);
 	}
 
+	/// @notice calculate number tokens need to be issued based on the `amount` received
+	/// @param `amount` number of `wei` received
 	function calculateTokens(uint256 amount)
 	internal
 	returns (uint256) {
-		if (block.number < startBlock || block.number >= endBlock) return 0;
+		// return `0` if the crowd fund has ended or it hasn't started
+		if (!isDuringSalePeriod(block.number)) return 0;
 
+		// get the current stage number by block number
 		uint8 currentStage = getStageByBlockNumber(block.number);
 
+		// if current stage is more than the total stage return 0 - something is wrong
 		if (currentStage > totalStages) return 0;
 
+		// calculate number of tokens that needs to be issued for the investor
 		uint256 purchasedTokens = safeDiv(amount, tokenPrice);
-		uint256 rewardedTokens = calculateReward(amount, currentStage);
+		// calculate number of tokens that needs to be rewraded to the investor
+		uint256 rewardedTokens = calculateReward(purchasedTokens, currentStage);
 
+		// add `purchasedTokens` and `rewardedTokens`
 		return safeAdd(purchasedTokens, rewardedTokens);
 	}
 
+	/// @notice calculate reward based on amount of tokens that will be issued to the investor
+	/// @param `amount` number tokens that will be minted for the investor
+	/// @param `stageNumber` number of current stage in the crowd fund process
 	function calculateReward(uint256 amount, uint8 stageNumber)
 	internal
 	returns (uint256 rewardAmount) {
-		if (stageNumber < 1) throw;
-		if (currentStage > totalStages) throw;
+		// throw if it's invalid stage number
+		if (
+			stageNumber < 1 ||
+			currentStage > totalStages
+		) throw;
 
+		// get stage index for the array
 		uint8 stageIndex = stageNumber - 1;
 
+		// calculate reward - e.q 100 token creates 100 * 20 /100 = 20 tokens for reward
 		return safeDiv(safeMul(amount, stageBonusPercentage[stageIndex]), 100);
 	}
 
+	/// @notice get crowd fund stage by block number
+	/// @param `_blockNumber` block number
 	function getStageByBlockNumber(uint256 _blockNumber)
 	internal
 	returns (uint8) {
+		// throw error, if block number is out of range
+		if (!isDuringSalePeriod(_blockNumber)) throw;
 
-		uint256 numOfBlockPassed = safeSub(_blockNumber, startBlock);
 		uint256 totalBlocks = safeSub(endBlock, startBlock);
+		uint256 numOfBlockPassed = safeSub(_blockNumber, startBlock);
 
-		return uint8(safeDiv(safeMul(totalStages, numOfBlockPassed), totalBlocks));
+		// since numbers round down we need to add one to number of stage
+		return uint8(safeDiv(safeMul(totalStages, numOfBlockPassed), totalBlocks) + 1);
 	}
 
+	/// @notice check if the block number is during the sale period
+	/// @param `_blockNumber` block number
+	function isDuringSalePeriod(uint256 _blockNumber)
+	internal
+	returns (bool) {
+		return (_blockNumber >= startBlock && _blockNumber < endBlock);
+	}
+
+	/// @notice finalize the crowdfun sale
+	/// @dev Only Gilgamesh Dev can trigger this function
 	function doFinalizeSale()
 	internal
 	onlyOwner {
+		// calculate the number of tokens that needs to be assigned to Gilgamesh team
 		uint256 teamTokens = safeMul(token.totalSupply(), teamTokenRatio);
 
 		// mint tokens for the team
 		if (!token.mint(owner, teamTokens)) throw;
 
+		// if there is any fund drain it
 		if(this.balance > 0) {
 			// send funds to fund owner wallet
 			if (!fundOwnerWallet.send(this.balance)) throw;
 		}
 
+		// finalize sale flag
 		saleFinalized = true;
+
+		// stop sale flag
 		saleStopped = true;
 
+		// log finalized
 		LogFinalized(teamTokens);
 	}
 
@@ -312,16 +381,20 @@ contract GilgameshTokenSale is SafeMath{
 	// Modifiers
 	// --------------
 
+	/// continue only when sale has stopped
 	modifier only_sale_stopped {
 		if (!saleStopped) throw;
 		_;
 	}
 
+
+	/// continue only when the address is valid
 	modifier validate_address(address _address) {
 		if (_address == 0) throw;
 		_;
 	}
 
+	/// continue only during the sale period
 	modifier only_during_sale_period {
 		// if block number is less than starting block fail
 		if (block.number < startBlock) throw;
@@ -331,6 +404,7 @@ contract GilgameshTokenSale is SafeMath{
 		_;
 	}
 
+	/// continue when sale is active and valid
 	modifier only_sale_active {
 		// if sale is finalized fail
 		if (saleFinalized) throw;
@@ -346,11 +420,13 @@ contract GilgameshTokenSale is SafeMath{
 		_;
 	}
 
+	// continue if minimum contribution has reached
 	modifier minimum_contribution() {
 		if (msg.value < minimumInvestment) throw;
 		_;
 	}
 
+	// continue when the invoker is the owner
 	modifier onlyOwner() {
 		if (msg.sender != owner) throw;
 		_;
