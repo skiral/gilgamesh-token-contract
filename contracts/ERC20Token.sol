@@ -26,7 +26,7 @@ interface ERC20Token {
 	// ---------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 totalSupply);
+	function totalSupply() constant returns (uint256 _totalSupply);
 
 	/// @notice Get the account balance of address _owner
 	/// @param _owner The address from which the balance will be retrieved

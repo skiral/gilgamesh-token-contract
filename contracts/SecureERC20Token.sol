@@ -69,7 +69,7 @@ contract SecureERC20Token is ERC20Token {
 	// --------------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 totalSupply) {
+	function totalSupply() constant returns (uint256 _totalSupply) {
 		return totalSupply;
 	}
 

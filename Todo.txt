@@ -7,3 +7,4 @@
 4. write unit test.
 5. read Solidity best practices.
 6. research 0x0 validation
+7- add block numbers in logs.

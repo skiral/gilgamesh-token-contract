@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<script src='../node_modules/web3/dist/web3.min.js'></script>
+</head>
+
+<body>
+	<script>
+		var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+		console.log('web3', web3);
+		web3.eth.defaultAccount = web3.eth.accounts[0];
+
+		var gilgameshTokenAbi = [{
+			"constant": true,
+			"inputs": [],
+			"name": "name",
+			"outputs": [{
+				"name": "",
+				"type": "string"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "minter",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_spender",
+				"type": "address"
+			}, {
+				"name": "_value",
+				"type": "uint256"
+			}],
+			"name": "approve",
+			"outputs": [{
+				"name": "success",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "creationBlock",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "totalSupply",
+			"outputs": [{
+				"name": "totalSupply",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_from",
+				"type": "address"
+			}, {
+				"name": "_to",
+				"type": "address"
+			}, {
+				"name": "_value",
+				"type": "uint256"
+			}],
+			"name": "transferFrom",
+			"outputs": [{
+				"name": "success",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "newMinter",
+				"type": "address"
+			}],
+			"name": "changeMinter",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "decimals",
+			"outputs": [{
+				"name": "",
+				"type": "uint8"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_owner",
+				"type": "address"
+			}, {
+				"name": "_amount",
+				"type": "uint256"
+			}],
+			"name": "mint",
+			"outputs": [{
+				"name": "success",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "version",
+			"outputs": [{
+				"name": "",
+				"type": "uint8"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [{
+				"name": "_owner",
+				"type": "address"
+			}],
+			"name": "balanceOf",
+			"outputs": [{
+				"name": "balance",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "newAdmin",
+				"type": "address"
+			}],
+			"name": "changeAdmin",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "symbol",
+			"outputs": [{
+				"name": "",
+				"type": "string"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_to",
+				"type": "address"
+			}, {
+				"name": "_value",
+				"type": "uint256"
+			}],
+			"name": "transfer",
+			"outputs": [{
+				"name": "success",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "isTransferEnabled",
+			"outputs": [{
+				"name": "",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [{
+				"name": "_owner",
+				"type": "address"
+			}, {
+				"name": "_spender",
+				"type": "address"
+			}],
+			"name": "allowance",
+			"outputs": [{
+				"name": "remaining",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_isTransferEnabled",
+				"type": "bool"
+			}],
+			"name": "enableTransfers",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "admin",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"inputs": [],
+			"payable": false,
+			"type": "constructor"
+		}, {
+			"anonymous": false,
+			"inputs": [{
+				"indexed": true,
+				"name": "_from",
+				"type": "address"
+			}, {
+				"indexed": true,
+				"name": "_to",
+				"type": "address"
+			}, {
+				"indexed": false,
+				"name": "_value",
+				"type": "uint256"
+			}],
+			"name": "Transfer",
+			"type": "event"
+		}, {
+			"anonymous": false,
+			"inputs": [{
+				"indexed": true,
+				"name": "_owner",
+				"type": "address"
+			}, {
+				"indexed": true,
+				"name": "_spender",
+				"type": "address"
+			}, {
+				"indexed": false,
+				"name": "_value",
+				"type": "uint256"
+			}],
+			"name": "Approval",
+			"type": "event"
+		}];
+
+		var gilgameshTokenSaleAbi = [{
+			"constant": true,
+			"inputs": [],
+			"name": "endBlock",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_fundOwnerWallet",
+				"type": "address"
+			}],
+			"name": "changeFundOwnerWalletAddress",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "creationBlock",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "emergencyStopSale",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "minimumInvestment",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "stageMaxBonusPercentage",
+			"outputs": [{
+				"name": "",
+				"type": "uint8"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"name": "stageBonusPercentage",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "saleStopped",
+			"outputs": [{
+				"name": "",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "startBlock",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "finalizeSale",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "restartSale",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "tokenPrice",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_cap",
+				"type": "uint256"
+			}],
+			"name": "changeCap",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "owner",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "saleFinalized",
+			"outputs": [{
+				"name": "",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_newOwner",
+				"type": "address"
+			}],
+			"name": "changeOwner",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "totalRaised",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "fundOwnerWallet",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "deposit",
+			"outputs": [],
+			"payable": true,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "teamTokenRatio",
+			"outputs": [{
+				"name": "",
+				"type": "uint8"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "isCapReached",
+			"outputs": [{
+				"name": "",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "minimumCap",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "totalStages",
+			"outputs": [{
+				"name": "",
+				"type": "uint8"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "hardCap",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "token",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "removeContract",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"inputs": [{
+				"name": "_startBlock",
+				"type": "uint256"
+			}, {
+				"name": "_endBlock",
+				"type": "uint256"
+			}, {
+				"name": "_fundOwnerWallet",
+				"type": "address"
+			}, {
+				"name": "_totalStages",
+				"type": "uint8"
+			}, {
+				"name": "_stageMaxBonusPercentage",
+				"type": "uint8"
+			}, {
+				"name": "_tokenPrice",
+				"type": "uint256"
+			}, {
+				"name": "_gilgameshToken",
+				"type": "address"
+			}, {
+				"name": "_minimumCap",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "constructor"
+		}, {
+			"payable": true,
+			"type": "fallback"
+		}, {
+			"anonymous": false,
+			"inputs": [{
+				"indexed": false,
+				"name": "owner",
+				"type": "address"
+			}, {
+				"indexed": false,
+				"name": "fundOwnerWallet",
+				"type": "address"
+			}, {
+				"indexed": false,
+				"name": "startBlock",
+				"type": "uint256"
+			}, {
+				"indexed": false,
+				"name": "endBlock",
+				"type": "uint256"
+			}],
+			"name": "LogTokenSaleInitialized",
+			"type": "event"
+		}, {
+			"anonymous": false,
+			"inputs": [{
+				"indexed": false,
+				"name": "contributorAddress",
+				"type": "address"
+			}, {
+				"indexed": false,
+				"name": "amount",
+				"type": "uint256"
+			}, {
+				"indexed": false,
+				"name": "totalRaised",
+				"type": "uint256"
+			}, {
+				"indexed": false,
+				"name": "userAssignedTokens",
+				"type": "uint256"
+			}],
+			"name": "LogContribution",
+			"type": "event"
+		}, {
+			"anonymous": false,
+			"inputs": [{
+				"indexed": false,
+				"name": "teamTokens",
+				"type": "uint256"
+			}],
+			"name": "LogFinalized",
+			"type": "event"
+		}];
+
+		var gilgameshTokenContractAddress = '0x51909b5b84cd7f558fdb9e8ec5d2a043d105d801';
+		var gilgameshTokenSaleContractAddress = '0x34aef6a6f95bbebe364cf6e33a6a54ae5e912a4d';
+
+		var gTokenContract = web3.eth.contract(gilgameshTokenAbi).at(gilgameshTokenContractAddress, function(err, ctr) {
+			return ctr;
+		});
+
+		var gTokenSaleContract = web3.eth.contract(gilgameshTokenSaleAbi).at(gilgameshTokenSaleContractAddress, function(err, ctr) {
+			return ctr;
+		});
+
+		//	foo.setFoo("this is a test");
+
+		console.log('web3.eth.coinbase', web3.eth.coinbase);
+		console.log('web3.eth.getBalance', web3.eth.getBalance(web3.eth.coinbase, (err, bal) => {
+			// convert balance from wei to ether
+			console.log("Ether Balance", web3.fromWei(bal, 'ether').toNumber());
+		}));
+
+		// contract.balanceOf(this.coinbase, (err, tokens) => {
+		// 	console.log(web3.fromWei(tokens, 'ether').toNumber())
+		// })
+
+		// gTokenContract.changeMinter('0xe328fb47a5ffbd26a2e17fcc40dd35efd41584c3');
+		console.log('gTokenContract', gTokenContract);
+		console.log('gTokenSaleContract', gTokenSaleContract);
+
+		var params = {
+			startBlock: 20,
+			endBlock: 100,
+			fundOwnerWallet: '"0x7aa9cc233296a52b7c8b60089fa29ac26fd301d7"',
+			totalStages: 5,
+			stageMaxBonusPercentage: 20,
+			tokenPrice: '"' + (10 ** 18 / 10) + '"', // 0.1 an ether
+			gilgameshToken: '"' + gilgameshTokenContractAddress + '"',
+			minimumCap: '"' + (10 ** 18 * 30) + '"' // 30 ether
+		}
+
+		var arr = [];
+		Object.keys(params).forEach(record => {
+			arr.push(params[record]);
+		})
+		console.log('str:', arr.join(','))
+
+		/*
+		20,100,"0x14723a09acff6d2a60dcdf7aa4aff308fddc160c",5,20,"1000000000000000000","0x0971b5d216af52c411c9016bbc63665b4e6f2542","10000000000000000000000"
+
+		*/
+
+
+
+		var events1 = gTokenContract.allEvents({
+			fromBlock: 0,
+			toBlock: 'latest'
+		});
+		events1.watch(function(error, result) {
+			console.log('gTokenContract error', error);
+			console.log('gTokenContract result', result);
+		});
+
+		var events2 = gTokenSaleContract.allEvents({
+			fromBlock: 0,
+			toBlock: 'latest'
+		});
+		events2.watch(function(error, result) {
+			console.log('gTokenSaleContract error', error);
+			console.log('gTokenSaleContract result', result);
+		});
+
+		/*
+
+		gTokenSaleContract.deposit({value: 200}, function(err, result){ console.log(err, result); })
+
+gTokenContract.changeMinter('0x681445376a4b6bc7ae992cf56dbf4f4b5e0e1312')
+
+
+Available Accounts
+==================
+(0) 0x2b03a04dcfb02a7c36528e092e85a8affa89e8b3
+(1) 0xc981360c5a00238c804f80d934eb9a75b17b9753
+(2) 0x393b309a467711cbbe2451093da009d020c8bc72
+(3) 0x8ee931913f3b24312fef8b70c5e941b04108423e
+(4) 0x2d9a57642a0632d11a4f3c829815cc240673bb8d
+(5) 0x86afce8764c69831cfb84f7144f7ae8e8d2c4ac2
+(6) 0xe9463be36df734a9ac5308e96714b4f36fb467fd
+(7) 0x877c1edb678ec2a2fc1e8b51ea3e3487ee8efa4c
+(8) 0x0ce55b4094b7d6517b828f5ceccf2429e245c9d8
+(9) 0x2b4ff41e85640693fe5281cfb091fe8c250daee9
+
+Private Keys
+==================
+(0) 3940c8f09b3e2b0916eb4548e29cdff9bc13b0ee46517fd7a0b46999f648f2db
+(1) 829dedf1ea8d4f52925830bffc271c3c28090c6a68bdb599f96375b3156a19de
+(2) 444a9cc63992fa653c5eb1806522cd26cba18e91cacd0f1471d9c25a67a4bdb3
+(3) 17232044a1b520b85a0b50ab508e89fcbe20783998aa1f159011ba27679fb8d9
+(4) 08c570842973b7b94dfb3d9400aacc3ffd707cf1aa2e86170ab7c17410c61d29
+(5) a314d1674c68b48e600016ce38507490e58de58427b7ed6c33486821007ce4c9
+(6) 46f39c996ef489ecdf2cf8ffafba7d4e8d0b0d2b87d54d1b9e35d0da28830a07
+(7) 786f11503a32e0447c6b2d13c7ba756235cfbdf17fc46f125beb01dbba34b3ef
+(8) 037bbe1c5fa6f2b55328e2e5380fe4698084881f1919e27043ec7f4a004f51a7
+(9) 6dec07ebcae430f5dd8bc6a5d48d78969afc701c3135880f44c063132baed308
+		*/
+	</script>
+</body>
+
+</html>
