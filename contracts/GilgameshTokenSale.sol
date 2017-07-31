@@ -68,10 +68,10 @@ contract GilgameshTokenSale is SafeMath{
 
 	// Contribution structor to store fund contributions
 	struct Contribution {
-		uint256 amount;				// amount that investor has contributed
-		address contributor;		// address of the investor contributor
-		uint256 blockNumber;		// block number when the contribution occured
-		uint256 userAssignedTokens;	// number of tokens transferred to the user
+		uint256 amount; // amount that investor has contributed
+		address contributor; // address of the investor contributor
+		uint256 blockNumber; // block number when the contribution occured
+		uint256 userAssignedTokens; // number of tokens transferred to the user
 	}
 
 	// list of contributions
@@ -98,14 +98,14 @@ contract GilgameshTokenSale is SafeMath{
 
 	// Constructor
 	function GilgameshTokenSale(
-		uint256 _startBlock,				// starting block number
-		uint256 _endBlock,					// ending block number
-		address _fundOwnerWallet,			// fund owner wallet address - transfer ether to this address after fund has been closed
-		uint8 _totalStages,					// total number of bonus stages
-		uint8 _stageMaxBonusPercentage,		// maximum percentage for bonus in the first stage
-		uint256 _tokenPrice,				// price of each token in `wei`
-		address _gilgameshToken,			// address of the gilgamesh ERC20 token contract
-		uint256 _minimumCap					// minimum cap, minimum amount of `wei` to be raised
+		uint256 _startBlock, // starting block number
+		uint256 _endBlock, // ending block number
+		address _fundOwnerWallet, // fund owner wallet address - transfer ether to this address after fund has been closed
+		uint8 _totalStages, // total number of bonus stages
+		uint8 _stageMaxBonusPercentage, // maximum percentage for bonus in the first stage
+		uint256 _tokenPrice, // price of each token in `wei`
+		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
+		uint256 _minimumCap // minimum cap, minimum amount of `wei` to be raised
 	)
 	validate_address(_fundOwnerWallet)
 	validate_address(_gilgameshToken) {
@@ -420,13 +420,13 @@ contract GilgameshTokenSale is SafeMath{
 		_;
 	}
 
-	// continue if minimum contribution has reached
+	/// continue if minimum contribution has reached
 	modifier minimum_contribution() {
 		if (msg.value < minimumInvestment) throw;
 		_;
 	}
 
-	// continue when the invoker is the owner
+	/// continue when the invoker is the owner
 	modifier onlyOwner() {
 		if (msg.sender != owner) throw;
 		_;
