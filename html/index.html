@@ -652,19 +652,13 @@
 
 
 
-		var events1 = gTokenContract.allEvents({
-			fromBlock: 0,
-			toBlock: 'latest'
-		});
+		var events1 = gTokenContract.allEvents();
 		events1.watch(function(error, result) {
 			console.log('gTokenContract error', error);
 			console.log('gTokenContract result', result);
 		});
 
-		var events2 = gTokenSaleContract.allEvents({
-			fromBlock: 0,
-			toBlock: 'latest'
-		});
+		var events2 = gTokenSaleContract.allEvents();
 		events2.watch(function(error, result) {
 			console.log('gTokenSaleContract error', error);
 			console.log('gTokenSaleContract result', result);
