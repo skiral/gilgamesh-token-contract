@@ -365,7 +365,7 @@ contract GilgameshTokenSale is SafeMath{
 		// if there is any fund drain it
 		if(this.balance > 0) {
 			// send ether funds to fund owner wallet
-			if (!owner.send(this.balance)) throw;
+			if (!fundOwnerWallet.send(this.balance)) throw;
 		}
 
 		// finalize sale flag
