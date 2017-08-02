@@ -6,17 +6,41 @@ Install `testrpc` Ethereum RPC client for testing and development
 npm install -g ethereumjs-testrpc
 ```
 
+
+Testing smart contract
+
+Install dependencies
+```sh
+npm install
+```
+
+Install truffle globally
+```sh
+npm install -g truffle
+```
+
+Compile smart contracts
+```sh
+truffle compile
+```
+
 Run EthereumJS TestRPC
 ```sh
 testrpc
 ```
 
-Testing smart contract
-```
-npm install
-truffle init
-truffle compile
+Deploy Smart contracts on TestRPC
+```sh
 truffle migrate --reset
+```
+
+Load truffle console
+```sh
 truffle console
-ContractName.at("0x5dfce3ed56e211120c26d2274674bf631f649a5b").balance.call()
+```
+
+Access Smart contracts and web3 API
+```sh
+web3.eth.blockNumber //6
+GilgameshToken.at("0xb03f2fd128dc31d04ad7bf2b594ad96f27bfefcf").admin()
 ```
