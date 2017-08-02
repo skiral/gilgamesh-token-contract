@@ -102,7 +102,7 @@ contract SecureERC20Token is ERC20Token {
 		require(isTransferEnabled);
 
 		// if from allowed transferrable rights to sender for amount _value
-		if (allowed[_from][msg.sender] < _value) throw;
+		if (allowed[_from][msg.sender] < _value) revert();
 
 		// subtreact allowance
 		allowed[_from][msg.sender] -= _value;
@@ -123,7 +123,7 @@ contract SecureERC20Token is ERC20Token {
 		// sender should first change the allowance to zero by calling approve(_spender, 0)
 		// race condition is explained below:
 		// https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-		if(_value != 0 && allowed[msg.sender][_spender] != 0) throw;
+		if(_value != 0 && allowed[msg.sender][_spender] != 0) revert();
 
 		if (
 			// if sender balance is less than _value return false;
@@ -161,14 +161,14 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to change the minter.
 	/// @param newMinter the address of the minter
 	function changeMinter(address newMinter) onlyAdmin {
-		if (minter == newMinter) throw;
+		if (minter == newMinter) revert();
 		minter = newMinter;
 	}
 
 	/// @notice only the admin is allowed to change the admin.
 	/// @param newAdmin the address of the new admin
 	function changeAdmin(address newAdmin) onlyAdmin {
-		if (admin == newAdmin) throw;
+		if (admin == newAdmin) revert();
 		admin = newAdmin;
 	}
 
@@ -179,10 +179,10 @@ contract SecureERC20Token is ERC20Token {
 	onlyMinter
 	returns (bool success) {
 		// preventing overflow on the totalSupply
-		if (totalSupply + _amount < totalSupply) throw;
+		if (totalSupply + _amount < totalSupply) revert();
 
 		// preventing overflow on the receiver account
-		if (balances[_owner] + _amount < balances[_owner]) throw;
+		if (balances[_owner] + _amount < balances[_owner]) revert();
 
 		// increase the total supply
 		totalSupply += _amount;
@@ -244,14 +244,14 @@ contract SecureERC20Token is ERC20Token {
 	// --------------
 	modifier onlyMinter() {
 		// if sender is not the minter stop the execution
-		if (msg.sender != minter) throw;
+		if (msg.sender != minter) revert();
 		// if the sender is the minter continue
 		_;
 	}
 
 	modifier onlyAdmin() {
 		// if sender is not the admin stop the execution
-		if (msg.sender != admin) throw;
+		if (msg.sender != admin) revert();
 		// if the sender is the admin continue
 		_;
 	}

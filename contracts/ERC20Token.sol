@@ -6,9 +6,9 @@
 
 // ERC20 compliant token interface
 // Wallets and Exchanges can easily use a ERC20 compliant token.
-pragma solidity 0.4.11;
+pragma solidity 0.4.13;
 
-interface ERC20Token {
+contract ERC20Token {
 
 	// --------
 	//	Events

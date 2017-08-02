@@ -117,7 +117,7 @@ contract GilgameshTokenSale is SafeMath{
 			_stageMaxBonusPercentage % _totalStages != 0 ||
 			// total number of blocks needs to be devisible by the total stages
 			(_endBlock - _startBlock) % _totalStages != 0
-		) throw;
+		) revert();
 
 		owner = msg.sender;
 		token = GilgameshToken(_gilgameshToken);
@@ -201,8 +201,8 @@ contract GilgameshTokenSale is SafeMath{
 	function changeCap(uint256 _cap)
 	public
 	onlyOwner {
-		if (_cap >= hardCap) throw;
-		if (_cap < minimumCap) throw;
+		if (_cap >= hardCap) revert();
+		if (_cap < minimumCap) revert();
 
 		hardCap = _cap;
 
@@ -218,7 +218,7 @@ contract GilgameshTokenSale is SafeMath{
 	function removeContract()
 	public
 	onlyOwner {
-		if (!saleFinalized) throw;
+		if (!saleFinalized) revert();
 		selfdestruct(msg.sender);
 	}
 
@@ -253,18 +253,18 @@ contract GilgameshTokenSale is SafeMath{
 	minimum_contribution()
 	validate_address(msg.sender) {
 		// if it passes hard cap throw
-		if (totalRaised + msg.value > hardCap) throw;
+		if (totalRaised + msg.value > hardCap) revert();
 
 		uint256 userAssignedTokens = calculateTokens(msg.value);
 
 		// if user tokens are 0 throw
-		if (userAssignedTokens <= 0) throw;
+		if (userAssignedTokens <= 0) revert();
 
 		// send funds to fund owner wallet
-		if (!fundOwnerWallet.send(msg.value)) throw;
+		if (!fundOwnerWallet.send(msg.value)) revert();
 
 		// mint tokens for the user
-		if (!token.mint(msg.sender, userAssignedTokens)) throw;
+		if (!token.mint(msg.sender, userAssignedTokens)) revert();
 
 		// save total number wei raised
 		totalRaised = safeAdd(totalRaised, msg.value);
@@ -316,7 +316,7 @@ contract GilgameshTokenSale is SafeMath{
 		if (
 			stageNumber < 1 ||
 			stageNumber > totalStages
-		) throw;
+		) revert();
 
 		// get stage index for the array
 		uint8 stageIndex = stageNumber - 1;
@@ -331,7 +331,7 @@ contract GilgameshTokenSale is SafeMath{
 	internal
 	returns (uint8) {
 		// throw error, if block number is out of range
-		if (!isDuringSalePeriod(_blockNumber)) throw;
+		if (!isDuringSalePeriod(_blockNumber)) revert();
 
 		uint256 totalBlocks = safeSub(endBlock, startBlock);
 		uint256 numOfBlockPassed = safeSub(_blockNumber, startBlock);
@@ -354,18 +354,18 @@ contract GilgameshTokenSale is SafeMath{
 	internal
 	onlyOwner {
 
-		if (saleFinalized) throw;
+		if (saleFinalized) revert();
 
 		// calculate the number of tokens that needs to be assigned to Gilgamesh team
 		uint256 teamTokens = safeMul(token.totalSupply(), teamTokenRatio);
 
 		// mint tokens for the team
-		if (!token.mint(tokenOwnerWallet, teamTokens)) throw;
+		if (!token.mint(tokenOwnerWallet, teamTokens)) revert();
 
 		// if there is any fund drain it
 		if(this.balance > 0) {
 			// send ether funds to fund owner wallet
-			if (!fundOwnerWallet.send(this.balance)) throw;
+			if (!fundOwnerWallet.send(this.balance)) revert();
 		}
 
 		// finalize sale flag
@@ -384,23 +384,23 @@ contract GilgameshTokenSale is SafeMath{
 
 	/// continue only when sale has stopped
 	modifier only_sale_stopped {
-		if (!saleStopped) throw;
+		if (!saleStopped) revert();
 		_;
 	}
 
 
 	/// validates an address - currently only checks that it isn't null
 	modifier validate_address(address _address) {
-		if (_address == 0x0) throw;
+		if (_address == 0x0) revert();
 		_;
 	}
 
 	/// continue only during the sale period
 	modifier only_during_sale_period {
 		// if block number is less than starting block fail
-		if (block.number < startBlock) throw;
+		if (block.number < startBlock) revert();
 		// if block number has reach to the end block fail
-		if (block.number >= endBlock) throw;
+		if (block.number >= endBlock) revert();
 		// otherwise safe to continue
 		_;
 	}
@@ -408,28 +408,28 @@ contract GilgameshTokenSale is SafeMath{
 	/// continue when sale is active and valid
 	modifier only_sale_active {
 		// if sale is finalized fail
-		if (saleFinalized) throw;
+		if (saleFinalized) revert();
 		// if sale is stopped fail
-		if (saleStopped) throw;
+		if (saleStopped) revert();
 		// if cap is reached
-		if (isCapReached) throw;
+		if (isCapReached) revert();
 		// if block number is less than starting block fail
-		if (block.number < startBlock) throw;
+		if (block.number < startBlock) revert();
 		// if block number has reach to the end block fail
-		if (block.number >= endBlock) throw;
+		if (block.number >= endBlock) revert();
 		// otherwise safe to continue
 		_;
 	}
 
 	/// continue if minimum contribution has reached
 	modifier minimum_contribution() {
-		if (msg.value < minimumInvestment) throw;
+		if (msg.value < minimumInvestment) revert();
 		_;
 	}
 
 	/// continue when the invoker is the owner
 	modifier onlyOwner() {
-		if (msg.sender != owner) throw;
+		if (msg.sender != owner) revert();
 		_;
 	}
 }
