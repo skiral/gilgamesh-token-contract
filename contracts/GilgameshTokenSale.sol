@@ -100,11 +100,11 @@ contract GilgameshTokenSale is SafeMath{
 		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
 		uint256 _minimumCap // minimum cap, minimum amount of wei to be raised
 	)
-	validate_address(_fundOwnerWallet)
-	validate_address(_gilgameshToken)
-	validate_address(_tokenOwnerWallet) {
+	validate_address(_fundOwnerWallet) {
 
 		if (
+			_gilgameshToken == 0x0 ||
+			_tokenOwnerWallet == 0x0 ||
 			// start block needs to be in the future
 			_startBlock < block.number ||
 			// start block should be less than ending block
