@@ -13,21 +13,25 @@ const assertChai = chai.assert;
 const INVALID_OPCODE = "VM Exception while processing transaction: invalid opc";
 
 contract("TestGilgameshTokenSale", (accounts) => {
+	let token;
+
+	beforeEach(async () => {
+		token = await GilgameshToken.deployed();
+	});
+
 	const createTokenSale = async ({
-		startBlock = 100,
-		endBlock = 200,
+		startBlock = 1000,
+		endBlock = 2000,
 		fundOwnerWallet = accounts[ 1 ],
 		tokenOwnerWallet = accounts[ 2 ],
 		totalStages = 2,
 		stageMaxBonusPercentage = 20,
-		tokenPrice = 10 ** 18,
+		tokenPrice = 10 ** 18 / 1000,
 		minimumCap = 5 * 10 ** 18,
 		owner = accounts[ 0 ],
 		gilgameshToken,
 		blockNumber = 1,
-	}) => {
-		const token = await GilgameshToken.deployed();
-
+	} = {}) => {
 		gilgameshToken = gilgameshToken === undefined ? token.address : gilgameshToken;
 
 		const tokenSaleParams = [
@@ -42,10 +46,12 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			minimumCap, // minimum cap, minimum amount of wei to be raised
 			blockNumber, // override the current block number
 		];
+
 		let sale;
 		try {
 			sale = await GilgameshTokenSaleMock.new(...tokenSaleParams, { from: owner });
 		} catch (e) {
+			console.log("sale failed", e);
 			throw new Error(e);
 		}
 
@@ -58,6 +64,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		assert.equal(await sale.minimumCap(), minimumCap, "`minimumCap` should match");
 		assert.equal(await sale.totalStages(), totalStages, "`totalStages` should match");
 		assert.equal(await sale.stageMaxBonusPercentage(), stageMaxBonusPercentage, "`stageMaxBonusPercentage` should match");
+		await token.changeMinter(sale.address);
 
 		return sale;
 	};
@@ -100,6 +107,37 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		it("stage bonus percentage needs to be devisible by number of stages", async () => {
 			assertChai.isRejected(createTokenSale({ stageMaxBonusPercentage: 80, totalStages: 3 }));
 			assertChai.isFulfilled(createTokenSale({ stageMaxBonusPercentage: 80, totalStages: 4 }));
+		});
+	});
+
+	const toEther = value => web3.fromWei(value, "ether");
+	const getBalance = addr => web3.eth.getBalance(addr).toNumber();
+	const toWei = value => web3.toWei(String(value), "ether");
+
+	describe("deposit() test cases", () => {
+		it.only("receive token for successuful payment", async () => {
+			const userAddress = accounts[ 4 ];
+			const sale = await createTokenSale({
+				startBlock: 900,
+			});
+			const tokenBalance = await token.balanceOf(userAddress);
+			console.log("token minter", await token.minter());
+			console.log("sale address", sale.address);
+			console.log("token balance", tokenBalance.valueOf());
+			console.log("ether balance", toEther(getBalance(userAddress)));
+
+			assert.isOk("everything", "everything is ok");
+
+			await sale.setMockedBlockNumber(1000);
+
+			// await sale.deposit({
+			// 	value: toWei(0.1),
+			// 	from: userAddress,
+			// });
+			// console.log("toWei(0.1)", toWei(0.1));
+			// console.log("number of tokens", (await sale.calculateTokens(toWei(0.1))).valueOf());
+
+			// console.log(await token.balanceOf(accounts[ 4 ]));
 		});
 	});
 });
