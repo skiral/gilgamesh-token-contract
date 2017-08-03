@@ -1,4 +1,4 @@
-# Gilgamesh Token Smart Contract
+# Gilgamesh Token Smart contracts for the initial sale http://GilgameshToken.com
 
 
 Install `testrpc` Ethereum RPC client for testing and development

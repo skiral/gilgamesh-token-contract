@@ -74,7 +74,8 @@ contract GilgameshTokenSale is SafeMath{
 		address owner,
 		address fundOwnerWallet,
 		uint256 startBlock,
-		uint256 endBlock
+		uint256 endBlock,
+		uint256 creationBlock
 	);
 
 	// log each contribution
@@ -106,13 +107,14 @@ contract GilgameshTokenSale is SafeMath{
 			_gilgameshToken == 0x0 ||
 			_tokenOwnerWallet == 0x0 ||
 			// start block needs to be in the future
-			_startBlock < block.number ||
+			_startBlock < getBlockNumber()  ||
 			// start block should be less than ending block
-			_startBlock >= _endBlock ||
+			_startBlock >= _endBlock  ||
 			// minimum number of stages
 			_totalStages < 2 ||
 			// verify stage max bonus
 			_stageMaxBonusPercentage <= 0  ||
+			_stageMaxBonusPercentage > 100 ||
 			// stage bonus percentage needs to be devisible by number of stages
 			_stageMaxBonusPercentage % _totalStages != 0 ||
 			// total number of blocks needs to be devisible by the total stages
@@ -123,7 +125,7 @@ contract GilgameshTokenSale is SafeMath{
 		token = GilgameshToken(_gilgameshToken);
 		endBlock = _endBlock;
 		startBlock = _startBlock;
-		creationBlock = block.number;
+		creationBlock = getBlockNumber();
 		fundOwnerWallet = _fundOwnerWallet;
 		tokenOwnerWallet = _tokenOwnerWallet;
 		tokenPrice = _tokenPrice;
@@ -144,7 +146,8 @@ contract GilgameshTokenSale is SafeMath{
 			owner,
 			fundOwnerWallet,
 			startBlock,
-			endBlock
+			endBlock,
+			creationBlock
 		);
 	}
 
@@ -377,6 +380,12 @@ contract GilgameshTokenSale is SafeMath{
 		// log finalized
 		LogFinalized(tokenOwnerWallet, teamTokens);
 	}
+
+	/// @notice returns block.number
+	function getBlockNumber() constant internal returns (uint) {
+		return block.number;
+	}
+
 
 	// --------------
 	// Modifiers
