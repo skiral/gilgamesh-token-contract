@@ -9,7 +9,7 @@ contract GilgameshToken is SecureERC20Token {
 	// @notice Constructor to create Gilgamesh ERC20 Token
 	function GilgameshToken()
 	SecureERC20Token(
-		10 ** 9, // 1 billion token reserved for team, gilgamesh users, marketing, legal...
+		0, // no token in the begning
 		"Gilgamesh Token", // Token Name
 		"GIL", // Token Symbol
 		18, // Decimals
