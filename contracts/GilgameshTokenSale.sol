@@ -292,10 +292,10 @@ contract GilgameshTokenSale is SafeMath{
 	internal
 	returns (uint256) {
 		// return 0 if the crowd fund has ended or it hasn't started
-		if (!isDuringSalePeriod(block.number)) return 0;
+		if (!isDuringSalePeriod(getBlockNumber())) return 0;
 
 		// get the current stage number by block number
-		uint8 currentStage = getStageByBlockNumber(block.number);
+		uint8 currentStage = getStageByBlockNumber(getBlockNumber());
 
 		// if current stage is more than the total stage return 0 - something is wrong
 		if (currentStage > totalStages) return 0;
@@ -304,7 +304,6 @@ contract GilgameshTokenSale is SafeMath{
 		uint256 purchasedTokens = safeDiv(amount, tokenPrice);
 		// calculate number of tokens that needs to be rewraded to the investor
 		uint256 rewardedTokens = calculateReward(purchasedTokens, currentStage);
-
 		// add purchasedTokens and rewardedTokens
 		return safeAdd(purchasedTokens, rewardedTokens);
 	}
@@ -407,9 +406,9 @@ contract GilgameshTokenSale is SafeMath{
 	/// continue only during the sale period
 	modifier only_during_sale_period {
 		// if block number is less than starting block fail
-		if (block.number < startBlock) revert();
+		if (getBlockNumber() < startBlock) revert();
 		// if block number has reach to the end block fail
-		if (block.number >= endBlock) revert();
+		if (getBlockNumber() >= endBlock) revert();
 		// otherwise safe to continue
 		_;
 	}
@@ -423,9 +422,9 @@ contract GilgameshTokenSale is SafeMath{
 		// if cap is reached
 		if (isCapReached) revert();
 		// if block number is less than starting block fail
-		if (block.number < startBlock) revert();
+		if (getBlockNumber() < startBlock) revert();
 		// if block number has reach to the end block fail
-		if (block.number >= endBlock) revert();
+		if (getBlockNumber() >= endBlock) revert();
 		// otherwise safe to continue
 		_;
 	}
