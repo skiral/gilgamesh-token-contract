@@ -49,9 +49,9 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 		let sale;
 		try {
+			// instantiate a new contract
 			sale = await GilgameshTokenSaleMock.new(...tokenSaleParams, { from: owner });
 		} catch (e) {
-			console.log("sale failed", e);
 			throw new Error(e);
 		}
 
@@ -64,6 +64,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		assert.equal(await sale.minimumCap(), minimumCap, "`minimumCap` should match");
 		assert.equal(await sale.totalStages(), totalStages, "`totalStages` should match");
 		assert.equal(await sale.stageMaxBonusPercentage(), stageMaxBonusPercentage, "`stageMaxBonusPercentage` should match");
+
 		await token.changeMinter(sale.address);
 
 		return sale;
@@ -108,14 +109,19 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			assertChai.isRejected(createTokenSale({ stageMaxBonusPercentage: 80, totalStages: 3 }));
 			assertChai.isFulfilled(createTokenSale({ stageMaxBonusPercentage: 80, totalStages: 4 }));
 		});
+
+		it("total number of blocks needs to be devisible by the total stages", async () => {
+			assertChai.isRejected(createTokenSale({ startBlock: 20, endBlock: 30, totalStages: 20 }));
+			assertChai.isFulfilled(createTokenSale({ startBlock: 20, endBlock: 30, totalStages: 10 }));
+		});
 	});
 
 	const toEther = value => web3.fromWei(value, "ether");
 	const getBalance = addr => web3.eth.getBalance(addr).toNumber();
 	const toWei = value => web3.toWei(String(value), "ether");
 
-	describe("deposit() test cases", () => {
-		it.only("receive token for successuful payment", async () => {
+	describe.skip("deposit() test cases", () => {
+		it("receive token for successuful payment", async () => {
 			const userAddress = accounts[ 4 ];
 			const sale = await createTokenSale({
 				startBlock: 900,
@@ -138,6 +144,104 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			// console.log("number of tokens", (await sale.calculateTokens(toWei(0.1))).valueOf());
 
 			// console.log(await token.balanceOf(accounts[ 4 ]));
+		});
+	});
+
+	describe.skip("isDuringSalePeriod() test cases", () => {
+		it("should return false for block numbers less than starting block ", async () => {
+			const sale = await createTokenSale({
+				startBlock: 900,
+			});
+			// using `.call` to explicitly call the method rather than the transaction.
+			assert.isFalse(await sale.isDuringSalePeriodMock.call(800));
+		});
+
+		it("should return true for block numbers between the starting block and end block", async () => {
+			const sale = await createTokenSale({
+				startBlock: 900,
+				endBoock: 1000,
+			});
+
+			assert.isTrue(await sale.isDuringSalePeriodMock.call(900));
+			assert.isTrue(await sale.isDuringSalePeriodMock.call(950));
+			assert.isTrue(await sale.isDuringSalePeriodMock.call(999));
+		});
+
+		it("should return false for block numbers more than end block", async () => {
+			const sale = await createTokenSale({
+				startBlock: 900,
+				endBlock: 1000,
+			});
+
+			assert.isFalse(await sale.isDuringSalePeriodMock.call(1000));
+			assert.isFalse(await sale.isDuringSalePeriodMock.call(1001));
+		});
+	});
+
+	describe("getStageByBlockNumber() test cases", () => {
+		it("test all use cases for getStageByBlockNumber() function", async () => {
+			let sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 20,
+				totalStages: 2,
+				stageMaxBonusPercentage: 20,
+			});
+
+			// helper function
+			// needs .toNumber() because it returns a bigNumber
+			const getStageByBlockNumber = async blockNumber => (await sale.getStageByBlockNumberMock.call(blockNumber)).toNumber();
+
+			assertChai.isRejected(sale.getStageByBlockNumberMock.call(9));
+			assertChai.isRejected(sale.getStageByBlockNumberMock.call(20));
+
+			// 10 to 14 are at stage 1
+			assert.equal(await getStageByBlockNumber(10), 1);
+			assert.equal(await getStageByBlockNumber(11), 1);
+			assert.equal(await getStageByBlockNumber(12), 1);
+			assert.equal(await getStageByBlockNumber(13), 1);
+			assert.equal(await getStageByBlockNumber(14), 1);
+			// // 14 to 20 are at stage 2
+			assert.equal(await getStageByBlockNumber(15), 2);
+			assert.equal(await getStageByBlockNumber(16), 2);
+			assert.equal(await getStageByBlockNumber(17), 2);
+			assert.equal(await getStageByBlockNumber(18), 2);
+			assert.equal(await getStageByBlockNumber(19), 2);
+
+			sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 20,
+				totalStages: 5,
+				stageMaxBonusPercentage: 20,
+			});
+
+			assert.equal(await getStageByBlockNumber(10), 1);
+			assert.equal(await getStageByBlockNumber(11), 1);
+			assert.equal(await getStageByBlockNumber(12), 2);
+			assert.equal(await getStageByBlockNumber(13), 2);
+			assert.equal(await getStageByBlockNumber(14), 3);
+			assert.equal(await getStageByBlockNumber(15), 3);
+			assert.equal(await getStageByBlockNumber(16), 4);
+			assert.equal(await getStageByBlockNumber(17), 4);
+			assert.equal(await getStageByBlockNumber(18), 5);
+			assert.equal(await getStageByBlockNumber(19), 5);
+
+			sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 20,
+				totalStages: 10,
+				stageMaxBonusPercentage: 20,
+			});
+
+			assert.equal(await getStageByBlockNumber(10), 1);
+			assert.equal(await getStageByBlockNumber(11), 2);
+			assert.equal(await getStageByBlockNumber(12), 3);
+			assert.equal(await getStageByBlockNumber(13), 4);
+			assert.equal(await getStageByBlockNumber(14), 5);
+			assert.equal(await getStageByBlockNumber(15), 6);
+			assert.equal(await getStageByBlockNumber(16), 7);
+			assert.equal(await getStageByBlockNumber(17), 8);
+			assert.equal(await getStageByBlockNumber(18), 9);
+			assert.equal(await getStageByBlockNumber(19), 10);
 		});
 	});
 });

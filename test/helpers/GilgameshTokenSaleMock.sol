@@ -40,11 +40,20 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 
 	// override the block number
 	function getBlockNumber() internal constant returns (uint) {
-      return mock_blockNumber;
-    }
+		return mock_blockNumber;
+	}
 
 
 	function setMockedBlockNumber(uint b) {
 		mock_blockNumber = b;
+	}
+
+	// mock internal methods
+	function isDuringSalePeriodMock(uint256 _blockNumber) public returns (bool) {
+		return isDuringSalePeriod(_blockNumber);
+	}
+
+	function getStageByBlockNumberMock(uint256 _blockNumber) public returns (uint8) {
+		return getStageByBlockNumber(_blockNumber);
 	}
 }
