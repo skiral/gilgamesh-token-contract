@@ -19,6 +19,10 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		token = await GilgameshToken.deployed();
 	});
 
+	const toEther = value => web3.fromWei(value, "ether");
+	const getBalance = addr => web3.eth.getBalance(addr).toNumber();
+	const toWei = value => web3.toWei(String(value), "ether");
+
 	const createTokenSale = async ({
 		startBlock = 1000,
 		endBlock = 2000,
@@ -116,9 +120,9 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	const toEther = value => web3.fromWei(value, "ether");
-	const getBalance = addr => web3.eth.getBalance(addr).toNumber();
-	const toWei = value => web3.toWei(String(value), "ether");
+	/* ------------------------
+	 * Test Public methods
+	 * --------------------- */
 
 	describe.skip("deposit() test cases", () => {
 		it("receive token for successuful payment", async () => {
@@ -147,7 +151,50 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe.skip("isDuringSalePeriod() test cases", () => {
+	describe("emergencyStopSale() test cases", () => {
+
+	});
+
+	describe("restartSale() test cases", () => {
+
+	});
+
+	describe("changeFundOwnerWalletAddress() test cases", () => {
+
+	});
+
+	describe("changeTokenOwnerWalletAddress() test cases", () => {
+
+	});
+
+	describe("finalizeSale() test cases", () => {
+
+	});
+
+	describe("changeCap() test cases", () => {
+
+	});
+
+	describe("removeContract() test cases", () => {
+
+	});
+
+	describe("changeOwner() test cases", () => {
+
+	});
+
+	describe("() payable test cases", () => {
+
+	});
+
+	/* ------------------------
+	 * /Test Public methods
+	 * --------------------- */
+
+	/* ------------------------
+	 * Test Internal methods
+	 * --------------------- */
+	describe("isDuringSalePeriod() test cases", () => {
 		it("should return false for block numbers less than starting block ", async () => {
 			const sale = await createTokenSale({
 				startBlock: 900,
@@ -244,4 +291,20 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			assert.equal(await getStageByBlockNumber(19), 10);
 		});
 	});
+
+	describe("calculateTokens() test cases", () => {
+
+	});
+
+	describe("calculateRewardTokens() test cases", () => {
+
+	});
+
+	describe("doFinalizeSale() test cases", () => {
+
+	});
+
+	/* ------------------------
+	 * /Test internal methods
+	 * --------------------- */
 });

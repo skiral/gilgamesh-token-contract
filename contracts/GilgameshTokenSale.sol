@@ -57,7 +57,7 @@ contract GilgameshTokenSale is SafeMath{
 	//  max bonus percentage on first stage
 	uint8 public stageMaxBonusPercentage;
 
-	// price of token per wei
+	// number of wei-GIL tokens for 1 wei (18 decimals)
 	uint256 public tokenPrice;
 
 	// the team owns 80% of the tokens - 4 times more than investors.
@@ -243,10 +243,6 @@ contract GilgameshTokenSale is SafeMath{
 		return deposit();
 	}
 
-	// --------------
-	// Internal Funtions
-	// --------------
-
 	///	@dev deposit() is an internal function that sends the ether that this
 	///	contract receives to the gilgameshFund and creates tokens in the address of the
 	function deposit()
@@ -286,6 +282,10 @@ contract GilgameshTokenSale is SafeMath{
 		);
 	}
 
+	// --------------
+	// Internal Funtions
+	// --------------
+
 	/// @notice calculate number tokens need to be issued based on the amount received
 	/// @param amount number of wei received
 	function calculateTokens(uint256 amount)
@@ -301,9 +301,9 @@ contract GilgameshTokenSale is SafeMath{
 		if (currentStage > totalStages) return 0;
 
 		// calculate number of tokens that needs to be issued for the investor
-		uint256 purchasedTokens = safeDiv(amount, tokenPrice);
+		uint256 purchasedTokens = safeMul(amount, tokenPrice);
 		// calculate number of tokens that needs to be rewraded to the investor
-		uint256 rewardedTokens = calculateReward(purchasedTokens, currentStage);
+		uint256 rewardedTokens = calculateRewardTokens(purchasedTokens, currentStage);
 		// add purchasedTokens and rewardedTokens
 		return safeAdd(purchasedTokens, rewardedTokens);
 	}
@@ -311,7 +311,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice calculate reward based on amount of tokens that will be issued to the investor
 	/// @param amount number tokens that will be minted for the investor
 	/// @param stageNumber number of current stage in the crowd fund process
-	function calculateReward(uint256 amount, uint8 stageNumber)
+	function calculateRewardTokens(uint256 amount, uint8 stageNumber)
 	internal
 	returns (uint256 rewardAmount) {
 		// throw if it's invalid stage number
