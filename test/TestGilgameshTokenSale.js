@@ -312,7 +312,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			assert.equal(await sale.calculateTokensMock.call(250), 0);
 		});
 
-		it("calculate tokesn", async () => {
+		it("calculate tokesn for 2 stages and 20% max bonus", async () => {
 			const tokenPrice = 1000;
 			const totalStages = 2;
 			const stageMaxBonusPercentage = 20;
@@ -331,12 +331,53 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			await sale.setMockedBlockNumber(20);
 			let totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
 
+			// 1000 + 20% profit = 1200
 			assert.equal(totalTokens, 1200);
 
 			await sale.setMockedBlockNumber(99);
 			totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
 
 			assert.equal(totalTokens, 1000);
+		});
+
+		it("calculate tokesn for 3 stages and 18% max bonus", async () => {
+			const tokenPrice = 2000; // 1 ether gives you 2000 tokens
+			const totalStages = 3;
+			const stageMaxBonusPercentage = 18;
+
+			const oneEther = toWei(1);
+			const decimals = 10 ** (await token.decimals()).toNumber();
+
+			// mocking rea
+			const sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 100,
+				tokenPrice,
+				totalStages: 3,
+				stageMaxBonusPercentage,
+			});
+
+			// stage one test
+			await sale.setMockedBlockNumber(10);
+			let totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			// 2000 + 18% profit = 2360
+			assert.equal(totalTokens, 2360 / 2000);
+
+			// stage two test
+			await sale.setMockedBlockNumber(40);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			// 2000 + 9% profit = 2180
+			assert.equal(totalTokens, 2180 / 2000);
+
+			// stage three test
+			await sale.setMockedBlockNumber(70);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens, 2000 / 2000);
+
+			// stage three test
+			await sale.setMockedBlockNumber(99);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens, 2000 / 2000);
 		});
 	});
 
