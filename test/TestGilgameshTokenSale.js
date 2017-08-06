@@ -292,7 +292,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe.only("calculateTokens() test cases", () => {
+	describe("calculateTokens() test cases", () => {
 		it("return 0 tokens if it is not during the crowdfund", async () => {
 			const sale = await createTokenSale({
 				startBlock: 20,
@@ -381,8 +381,39 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe("calculateRewardTokens() test cases", () => {
+	describe.only("calculateRewardTokens() test cases", () => {
+		it("fail if stage number is invalid", async () => {
+			const sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 100,
+				tokenPrice: 2000,
+				totalStages: 3,
+				stageMaxBonusPercentage: 18,
+			});
 
+			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 5));
+			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 4));
+			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 0));
+		});
+
+		it("return valid reward", async () => {
+			const sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 100,
+				tokenPrice: 2000,
+				totalStages: 3,
+				stageMaxBonusPercentage: 18,
+			});
+
+			let reward = (await sale.calculateRewardTokensMock.call(100, 1)).toNumber();
+			assert.equal(reward, 18);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 2)).toNumber();
+			assert.equal(reward, 9);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 3)).toNumber();
+			assert.equal(reward, 0);
+		});
 	});
 
 	describe("doFinalizeSale() test cases", () => {
@@ -393,3 +424,21 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	 * /Test internal methods
 	 * --------------------- */
 });
+
+/*
+function calculateRewardTokens(uint256 amount, uint8 stageNumber)
+internal
+returns (uint256 rewardAmount) {
+	// throw if it's invalid stage number
+	if (
+		stageNumber < 1 ||
+		stageNumber > totalStages
+	) revert();
+
+	// get stage index for the array
+	uint8 stageIndex = stageNumber - 1;
+
+	// calculate reward - e.q 100 token creates 100 * 20 /100 = 20 tokens for reward
+	return safeDiv(safeMul(amount, stageBonusPercentage[stageIndex]), 100);
+}
+*/
