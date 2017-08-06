@@ -56,4 +56,8 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 	function getStageByBlockNumberMock(uint256 _blockNumber) public returns (uint8) {
 		return getStageByBlockNumber(_blockNumber);
 	}
+
+	function calculateTokensMock(uint256 amount) public returns (uint256) {
+		return calculateTokens(amount);
+	}
 }

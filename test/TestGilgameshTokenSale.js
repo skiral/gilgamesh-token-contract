@@ -292,8 +292,52 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe("calculateTokens() test cases", () => {
+	describe.only("calculateTokens() test cases", () => {
+		it("return 0 tokens if it is not during the crowdfund", async () => {
+			const sale = await createTokenSale({
+				startBlock: 20,
+				endBlock: 100,
+			});
 
+			// less than start block number
+			await sale.setMockedBlockNumber(19);
+			assert.equal(await sale.calculateTokensMock.call(250), 0);
+
+			// more than or equal end block number
+			await sale.setMockedBlockNumber(100);
+			assert.equal(await sale.calculateTokensMock.call(250), 0);
+
+			// more than or equal end block number
+			await sale.setMockedBlockNumber(101);
+			assert.equal(await sale.calculateTokensMock.call(250), 0);
+		});
+
+		it("calculate tokesn", async () => {
+			const tokenPrice = 1000;
+			const totalStages = 2;
+			const stageMaxBonusPercentage = 20;
+
+			const sale = await createTokenSale({
+				startBlock: 20,
+				endBlock: 100,
+				tokenPrice, // 1 ether gives you 1000 tokens
+				totalStages,
+				stageMaxBonusPercentage,
+			});
+
+			const oneEther = toWei(1);
+			const decimals = 10 ** 18;
+
+			await sale.setMockedBlockNumber(20);
+			let totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
+
+			assert.equal(totalTokens, 1200);
+
+			await sale.setMockedBlockNumber(99);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
+
+			assert.equal(totalTokens, 1000);
+		});
 	});
 
 	describe("calculateRewardTokens() test cases", () => {
