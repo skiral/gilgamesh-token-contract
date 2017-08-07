@@ -60,8 +60,8 @@ contract GilgameshTokenSale is SafeMath{
 	// number of wei-GIL tokens for 1 wei (18 decimals)
 	uint256 public tokenPrice;
 
-	// the team owns 80% of the tokens - 4 times more than investors.
-	uint8 public teamTokenRatio = 4;
+	// the team owns 25% of the tokens - 3 times more than investors.
+	uint8 public teamTokenRatio = 3;
 
 	// gilgamesh token
 	GilgameshToken public token;
@@ -206,6 +206,7 @@ contract GilgameshTokenSale is SafeMath{
 	onlyOwner {
 		if (_cap >= hardCap) revert();
 		if (_cap < minimumCap) revert();
+		if (_cap <= totalRaised) revert();
 
 		hardCap = _cap;
 
@@ -361,8 +362,10 @@ contract GilgameshTokenSale is SafeMath{
 		// calculate the number of tokens that needs to be assigned to Gilgamesh team
 		uint256 teamTokens = safeMul(token.totalSupply(), teamTokenRatio);
 
-		// mint tokens for the team
-		if (!token.mint(tokenOwnerWallet, teamTokens)) revert();
+		if (teamTokens > 0){
+			// mint tokens for the team
+			if (!token.mint(tokenOwnerWallet, teamTokens)) revert();
+		}
 
 		// if there is any fund drain it
 		if(this.balance > 0) {
@@ -384,7 +387,6 @@ contract GilgameshTokenSale is SafeMath{
 	function getBlockNumber() constant internal returns (uint) {
 		return block.number;
 	}
-
 
 	// --------------
 	// Modifiers
