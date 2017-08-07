@@ -167,8 +167,112 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 	});
 
-	describe("finalizeSale() test cases", () => {
+	const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
 
+	describe.only("finalizeSale() test cases", () => {
+		const tokenPrice = 2000;
+		const investedEther = 0.1; 	// 0.1 of 2000 = 200
+		const userAddress = accounts[ 1 ];
+		const giglameshTokenAddress = accounts[ 3 ];
+		const gilgameshEthAddress = accounts[ 2 ];
+
+		it("only owner can finalize the sale", async () => {
+			const sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 100,
+				tokenPrice,
+				totalStages: 3,
+				stageMaxBonusPercentage: 18,
+				fundOwnerWallet: gilgameshEthAddress,
+				tokenOwnerWallet: giglameshTokenAddress,
+			});
+			const decimals = 10 ** (await token.decimals()).toNumber();
+
+			const gilgameshFunCurrentBalance = getBalance(gilgameshEthAddress);
+
+			await sale.setMockedBlockNumber(99);
+			await sale.deposit({
+				from: userAddress,
+				value: toWei(investedEther),
+			});
+
+			// check token contract total supply: 200
+			assert.equal(
+				toTokenNumber(await token.totalSupply.call()),
+				tokenPrice * investedEther,
+				"check token contract total supply: 200",
+			);
+
+			// check token contract user supply: 200
+			assert.equal(
+				toTokenNumber(await token.balanceOf.call(userAddress)),
+				tokenPrice * investedEther,
+				"check token contract user supply: 200",
+			);
+
+			// check total amount of Ether raised from token sale contract
+			assert.equal(
+				await sale.totalRaised(),
+				toWei(investedEther),
+				"check total amount of Ether raised from token sale contract",
+			);
+
+			// check gilgamesh dev account balance - make sure ether has been moved to gilgamesh dev account.
+			// current balance - previous balance == deposited amount
+			assert.equal(
+				getBalance(gilgameshEthAddress) - gilgameshFunCurrentBalance,
+				toWei(investedEther),
+				"Gilgamesh Dev balance should be updated",
+			);
+
+			await sale.deposit({
+				from: userAddress,
+				value: toWei(investedEther),
+			});
+
+			// check total amount of Ether raised from token sale contract
+			assert.equal(
+				await sale.totalRaised(),
+				toWei(investedEther * 2),
+				"check total amount of Ether raised from token sale contract",
+			);
+
+			// only owner can finalize the sale
+			assertChai.isRejected(
+				sale.finalizeSale.call({
+					from: userAddress,
+				}),
+			);
+
+			// owner finalize the sale
+			await sale.finalizeSale();
+
+			// sale should have been stopped
+			assert.equal(await sale.saleStopped(), true, "sale should have been stopped");
+			assert.equal(await sale.saleFinalized(), true, "sale should have been finalized");
+
+			// check if giglgamesh team have received their tokens.
+			// total invested 0.2 ether = (400) token * 3 = 1200 for the team.
+			// check token contract user supply: 200
+			assert.equal(
+				toTokenNumber(await token.balanceOf.call(giglameshTokenAddress)),
+				tokenPrice * (investedEther * 2) * 3,
+				"check token contract gigamesh team user supply: 1200",
+			);
+
+			// finalizing the sale after its finalized should fail
+			assertChai.isRejected(
+				sale.finalizeSale.call(),
+			);
+
+			// future deposit should fail after sale has stopped
+			assertChai.isRejected(
+				sale.deposit({
+					from: userAddress,
+					value: toWei(investedEther),
+				}),
+			);
+		});
 	});
 
 	describe("changeCap() test cases", () => {
@@ -381,7 +485,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe.only("calculateRewardTokens() test cases", () => {
+	describe("calculateRewardTokens() test cases", () => {
 		it("fail if stage number is invalid", async () => {
 			const sale = await createTokenSale({
 				startBlock: 10,
@@ -415,30 +519,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			assert.equal(reward, 0);
 		});
 	});
-
-	describe("doFinalizeSale() test cases", () => {
-
-	});
-
 	/* ------------------------
 	 * /Test internal methods
 	 * --------------------- */
 });
-
-/*
-function calculateRewardTokens(uint256 amount, uint8 stageNumber)
-internal
-returns (uint256 rewardAmount) {
-	// throw if it's invalid stage number
-	if (
-		stageNumber < 1 ||
-		stageNumber > totalStages
-	) revert();
-
-	// get stage index for the array
-	uint8 stageIndex = stageNumber - 1;
-
-	// calculate reward - e.q 100 token creates 100 * 20 /100 = 20 tokens for reward
-	return safeDiv(safeMul(amount, stageBonusPercentage[stageIndex]), 100);
-}
-*/
