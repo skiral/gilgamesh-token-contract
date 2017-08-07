@@ -229,6 +229,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice only the owner is allowed to change the owner.
 	/// @param _newOwner the address of the new owner
 	function changeOwner(address _newOwner)
+	public
 	onlyOwner {
 		require(_newOwner != owner);
 		owner = _newOwner;

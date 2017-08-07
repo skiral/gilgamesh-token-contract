@@ -74,7 +74,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		return sale;
 	};
 
-	describe("token be deployed sucessfully deployment", () => {
+	describe.skip("token be deployed sucessfully deployment", () => {
 		it("default parameters", () => {
 			createTokenSale();
 		});
@@ -126,19 +126,19 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 	describe.skip("deposit() test cases", () => {
 		it("receive token for successuful payment", async () => {
-			const userAddress = accounts[ 4 ];
-			const sale = await createTokenSale({
-				startBlock: 900,
-			});
-			const tokenBalance = await token.balanceOf(userAddress);
-			console.log("token minter", await token.minter());
-			console.log("sale address", sale.address);
-			console.log("token balance", tokenBalance.valueOf());
-			console.log("ether balance", toEther(getBalance(userAddress)));
-
-			assert.isOk("everything", "everything is ok");
-
-			await sale.setMockedBlockNumber(1000);
+			// const userAddress = accounts[ 4 ];
+			// const sale = await createTokenSale({
+			// 	startBlock: 900,
+			// });
+			// const tokenBalance = await token.balanceOf(userAddress);
+			// console.log("token minter", await token.minter());
+			// console.log("sale address", sale.address);
+			// console.log("token balance", tokenBalance.valueOf());
+			// console.log("ether balance", toEther(getBalance(userAddress)));
+			//
+			// assert.isOk("everything", "everything is ok");
+			//
+			// await sale.setMockedBlockNumber(1000);
 
 			// await sale.deposit({
 			// 	value: toWei(0.1),
@@ -167,18 +167,18 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 	});
 
-	const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
-
-	describe.only("finalizeSale() test cases", () => {
+	describe("finalizeSale() test cases", () => {
 		const tokenPrice = 2000;
 		const investedEther = 0.1; 	// 0.1 of 2000 = 200
 		const userAddress = accounts[ 1 ];
 		const giglameshTokenAddress = accounts[ 3 ];
 		const gilgameshEthAddress = accounts[ 2 ];
+		const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
 
 		it("only owner can finalize the sale", async () => {
 			const sale = await createTokenSale({
 				startBlock: 10,
+				blockNumber: 8,
 				endBlock: 100,
 				tokenPrice,
 				totalStages: 3,
@@ -284,7 +284,38 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	});
 
 	describe("changeOwner() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.changeOwner.call(accounts[ 1 ], {
+					from: accounts[ 4 ],
+				}),
+			);
+		});
+
+		it("it should fail it is assigned to the same owner ", async () => {
+			const sale = await createTokenSale();
+
+			assertChai.isRejected(
+				sale.changeOwner.call(web3.eth.defaultAccount),
+			);
+		});
+
+		it("shouldn't be able to reassign owner from the previous owner", async () => {
+			const sale = await createTokenSale();
+			const newOwner = await sale.changeOwner(accounts[ 2 ]);
+			// owner has been changed
+			assert.equal(await sale.owner(), accounts[ 2 ]);
+
+			// can't change owner because the owner is changed
+			try {
+				await sale.changeOwner(accounts[ 3 ]);
+				assert.fail("should not be able to change the owner from default owner");
+			} catch (e) {
+				assert.isOk("it should fail");
+			}
+		});
 	});
 
 	describe("() payable test cases", () => {

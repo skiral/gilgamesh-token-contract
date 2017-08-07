@@ -43,7 +43,6 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 		return mock_blockNumber;
 	}
 
-
 	function setMockedBlockNumber(uint b) {
 		mock_blockNumber = b;
 	}
@@ -59,5 +58,11 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 
 	function calculateTokensMock(uint256 amount) public returns (uint256) {
 		return calculateTokens(amount);
+	}
+
+	function calculateRewardTokensMock(uint256 amount, uint8 stageNumber)
+	public
+	returns (uint256 rewardAmount) {
+		return calculateRewardTokens(amount, stageNumber);
 	}
 }
