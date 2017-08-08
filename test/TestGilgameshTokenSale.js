@@ -249,6 +249,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 			// sale should have been stopped
 			assert.equal(await sale.saleStopped(), true, "sale should have been stopped");
+			// sale has been finalized
 			assert.equal(await sale.saleFinalized(), true, "sale should have been finalized");
 
 			// check if giglgamesh team have received their tokens.
@@ -276,7 +277,94 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	});
 
 	describe("changeCap() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
 
+			assertChai.isRejected(
+				sale.changeCap(toWei(10000), {
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should fail for caps less than minimumCap ", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
+
+			assertChai.isRejected(
+				sale.changeCap(toWei(8)),
+			);
+		});
+
+		it("it should fail if it is not more than the total raised", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
+
+			await sale.setTotalRaised(toWei(40));
+
+			assertChai.isRejected(
+				sale.changeCap(toWei(40)),
+			);
+
+			assertChai.isRejected(
+				sale.changeCap(toWei(39)),
+			);
+		});
+
+		it("it should fail if it is not more than the hard cap", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
+
+			await sale.setTotalRaised(toWei(40));
+
+			assertChai.isRejected(
+				sale.changeCap(toWei(1000000)),
+			);
+
+			assertChai.isRejected(
+				sale.changeCap(toWei(1000001)),
+			);
+		});
+
+		it("it should not fail if it the cap is more than the amount raised.", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
+
+			await sale.setTotalRaised(toWei(40));
+
+			// more than total raised should be fulfilled;
+			assertChai.isFulfilled(
+				sale.changeCap(toWei(41)),
+			);
+		});
+
+		it("if it is more than the hard cap it should finalize sale", async () => {
+			const sale = await createTokenSale({
+				minimumCap: toWei(10),
+			});
+
+			const newCap = toWei(1000);
+
+			// if it has raised at least 1 finney less than new hard cap.
+			await sale.setTotalRaised(newCap - toWei(0.01));
+
+			// more than total raised should be fulfilled;
+			await sale.changeCap(newCap);
+
+			assert.equal(await sale.isCapReached(), true, "cap has been reached");
+
+			// sale should have been stopped
+			assert.equal(await sale.saleStopped(), true, "sale should have been stopped");
+
+			// sale has been finalized
+			assert.equal(await sale.saleFinalized(), true, "sale should have been finalized");
+		});
 	});
 
 	describe("removeContract() test cases", () => {

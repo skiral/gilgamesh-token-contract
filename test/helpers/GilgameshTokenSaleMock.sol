@@ -65,4 +65,9 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 	returns (uint256 rewardAmount) {
 		return calculateRewardTokens(amount, stageNumber);
 	}
+
+	function setTotalRaised(uint256 amount)
+	public {
+		totalRaised = amount;
+	}
 }
