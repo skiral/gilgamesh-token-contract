@@ -165,7 +165,8 @@ contract GilgameshTokenSale is SafeMath{
 	}
 
 	/// @notice Function to restart stopped sale.
-	/// @dev Only Gilgamesh Dev can do it after it has been disabled and sale is ongoing.
+	/// @dev Only Gilgamesh Dev can do it after it has been disabled and sale has stopped.
+	/// can it's in a valid time range for sale
 	function restartSale()
 	public
 	only_during_sale_period

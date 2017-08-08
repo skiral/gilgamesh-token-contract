@@ -152,19 +152,149 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	});
 
 	describe("emergencyStopSale() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.emergencyStopSale({
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should fail if the sale is not active ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(100);
+
+			assertChai.isRejected(
+				sale.emergencyStopSale(),
+			);
+		});
+
+		it("it should pass if the sale is still active ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.emergencyStopSale();
+
+			assert.equal(await sale.saleStopped(), true, "sale should be stopped");
+		});
 	});
 
 	describe("restartSale() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.restartSale({
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should fail if the sale is not during sale period ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(100);
+
+			assertChai.isRejected(
+				sale.restartSale(),
+			);
+		});
+
+		it("it should fail if the sale is not during sale period ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(100);
+
+			assertChai.isRejected(
+				sale.restartSale(),
+			);
+		});
+
+		it("it should fail if the sale is still on going ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(1000);
+
+			assertChai.isRejected(
+				sale.restartSale(),
+			);
+		});
+
+		it("it should not fail it's by the owner and sale has been stopped and is during sale period ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.emergencyStopSale();
+
+			try {
+				sale.restartSale();
+			} catch (e) {
+				assert.fail("it should not fail");
+			}
+
+			assert.equal(await sale.saleStopped(), false, "sale should not be stopped");
+		});
 	});
 
 	describe("changeFundOwnerWalletAddress() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.changeFundOwnerWalletAddress(accounts[ 3 ], {
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should fail it has passed invalid address ", async () => {
+			const sale = await createTokenSale();
+
+			assertChai.isRejected(
+				sale.changeFundOwnerWalletAddress(0x0),
+			);
+		});
+
+		it("it should fail it has passed invalid address ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.changeFundOwnerWalletAddress(accounts[ 3 ]);
+
+			assert.equal(await sale.fundOwnerWallet(), accounts[ 3 ], "verify fund owner new address");
+		});
 	});
 
 	describe("changeTokenOwnerWalletAddress() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.changeTokenOwnerWalletAddress(accounts[ 3 ], {
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should fail it has passed invalid address ", async () => {
+			const sale = await createTokenSale();
+
+			assertChai.isRejected(
+				sale.changeTokenOwnerWalletAddress(0x0),
+			);
+		});
+
+		it("it should fail it has passed invalid address ", async () => {
+			const sale = await createTokenSale();
+
+			await sale.changeTokenOwnerWalletAddress(accounts[ 4 ]);
+
+			assert.equal(await sale.tokenOwnerWallet(), accounts[ 4 ], "verify token owner new address");
+		});
 	});
 
 	describe("finalizeSale() test cases", () => {
@@ -367,7 +497,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe.only("removeContract() test cases", () => {
+	describe("removeContract() test cases", () => {
 		it("it should fail it is called by non owner ", async () => {
 			const sale = await createTokenSale();
 
@@ -398,7 +528,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			// deposit some cash
 			await sale.deposit({
 				from: userAddress,
-				value: toWei(3),
+				value: toWei(0.1),
 			});
 
 			// owner finalize the sale
