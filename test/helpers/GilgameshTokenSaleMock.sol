@@ -70,4 +70,8 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 	public {
 		totalRaised = amount;
 	}
+
+	function setCapHasReached(bool _isCapReached) public {
+		isCapReached = _isCapReached;
+	}
 }

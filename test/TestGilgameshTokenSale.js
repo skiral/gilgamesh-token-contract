@@ -30,7 +30,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		tokenOwnerWallet = accounts[ 2 ],
 		totalStages = 2,
 		stageMaxBonusPercentage = 20,
-		tokenPrice = 10 ** 18 / 1000,
+		tokenPrice = 2000,
 		minimumCap = 5 * 10 ** 18,
 		owner = accounts[ 0 ],
 		gilgameshToken,
@@ -124,7 +124,156 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	 * Test Public methods
 	 * --------------------- */
 
-	describe.skip("deposit() test cases", () => {
+	describe.only("deposit() test cases", () => {
+		it("it should fail if the sale hasn't started", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale hasn't been started
+			await sale.setMockedBlockNumber(900);
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.1),
+				}),
+			);
+		});
+
+		it("it should fail if the e sale has reached end block", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(2000);
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.1),
+				}),
+			);
+		});
+
+		it("it should fail if the cap has reached", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.setCapHasReached(true);
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("it should fail if sale has stopped", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.emergencyStopSale();
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("it should fail if sale is finalized", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.finalizeSale();
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("it should fail if it doesn't meet minimum contribution", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.009),
+				}),
+			);
+		});
+
+		it("it should fail if the address is invalid", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: 0x0,
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("it should fail if it exceeds hard cap", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.setTotalRaised(toWei(1000000));
+
+			assertChai.isRejected(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("it should not fail if it has met all the requirements", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			assertChai.isFulfilled(
+				sale.deposit({
+					from: accounts[ 2 ],
+					gas: 200000,
+					value: toWei(0.01),
+				}),
+			);
+		});
+
+		it("if it reaches hard cap isCapReached should be true", async () => {
+			const sale = await createTokenSale();
+			// it should fail if the sale has reached end block
+			await sale.setMockedBlockNumber(1000);
+
+			await sale.setTotalRaised(toWei(1000000 - 0.01));
+			await sale.deposit({
+				from: accounts[ 2 ],
+				gas: 200000,
+				value: toWei(0.01),
+			});
+
+			assert(await sale.isCapReached(), true, "cap should be reached");
+		});
+
 		it("receive token for successuful payment", async () => {
 			// const userAddress = accounts[ 4 ];
 			// const sale = await createTokenSale({
@@ -580,7 +729,24 @@ contract("TestGilgameshTokenSale", (accounts) => {
 	});
 
 	describe("() payable test cases", () => {
+		it("0.1 ether has been sent to fundOwnerAddress", async () => {
+			const sale = await createTokenSale({
+				fundOwnerWallet: accounts[ 3 ],
+			});
+			const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
 
+			const fundOwnerPrevBalance = getBalance(accounts[ 3 ]);
+			await sale.setMockedBlockNumber(1000);
+
+			await web3.eth.sendTransaction({
+				from: accounts[ 2 ],
+				gas: 200000,
+				value: toWei(0.1),
+				to: sale.address,
+			});
+
+			assert.equal(getBalance(accounts[ 3 ]) - fundOwnerPrevBalance, toWei(0.1));
+		});
 	});
 
 	/* ------------------------
