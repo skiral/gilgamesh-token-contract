@@ -367,8 +367,51 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
-	describe("removeContract() test cases", () => {
+	describe.only("removeContract() test cases", () => {
+		it("it should fail it is called by non owner ", async () => {
+			const sale = await createTokenSale();
 
+			assertChai.isRejected(
+				sale.removeContract({
+					from: accounts[ 4 ], // non owner account
+				}),
+			);
+		});
+
+		it("it should if the sale is still active", async () => {
+			const sale = await createTokenSale();
+
+			assertChai.isRejected(
+				sale.removeContract(),
+			);
+		});
+
+		it("it should transfer funds to the owner", async () => {
+			const sale = await createTokenSale();
+			const userAddress = accounts[ 3 ];
+			const previousBalance = getBalance(accounts[ 0 ]);
+
+			web3.eth.defaultAddress = accounts[ 0 ];
+
+			await sale.setMockedBlockNumber(1000);
+
+			// deposit some cash
+			await sale.deposit({
+				from: userAddress,
+				value: toWei(3),
+			});
+
+			// owner finalize the sale
+			await sale.finalizeSale();
+
+			// remove the contract
+			try {
+				await sale.removeContract();
+			} catch (e) {
+				// it shouln't fail
+				assert.fail("it should remove the contract successfully");
+			}
+		});
 	});
 
 	describe("changeOwner() test cases", () => {
