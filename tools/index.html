@@ -13,6 +13,100 @@
 		console.log('web3', web3);
 		web3.eth.defaultAccount = web3.eth.accounts[0];
 
+
+
+
+
+
+
+		var aa = web3.eth.contract([{
+			"constant": false,
+			"inputs": [{
+				"name": "ad",
+				"type": "address"
+			}],
+			"name": "changeAddr",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [],
+			"name": "getValue",
+			"outputs": [{
+				"name": "value",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "val",
+				"type": "uint256"
+			}],
+			"name": "testValue",
+			"outputs": [{
+				"name": "v",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "pp",
+			"outputs": [{
+				"name": "",
+				"type": "address"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "isTransferEnabled",
+			"outputs": [{
+				"name": "",
+				"type": "bool"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": true,
+			"inputs": [],
+			"name": "vv",
+			"outputs": [{
+				"name": "",
+				"type": "uint256"
+			}],
+			"payable": false,
+			"type": "function"
+		}, {
+			"constant": false,
+			"inputs": [{
+				"name": "_isTransferEnabled",
+				"type": "bool"
+			}],
+			"name": "enableTransfers",
+			"outputs": [],
+			"payable": false,
+			"type": "function"
+		}, {
+			"inputs": [],
+			"payable": false,
+			"type": "constructor"
+		}]).at("0x39416eb6b65bd433529d301590737d18ea73cfdc", function(err, ctr) {
+			return ctr;
+		});
+
+
+
+
+
+
+
+
 		var gilgameshTokenAbi = [{
 			"constant": true,
 			"inputs": [],
@@ -665,6 +759,13 @@
 		});
 
 		/*
+
+		web3.eth.sendTransaction({
+			from: accounts[ 2 ],
+			gas: 200000,
+			value: toWei(0.1),
+			to: sale.address,
+		}),
 
 		gTokenSaleContract.deposit({value: 200}, function(err, result){ console.log(err, result); })
 
