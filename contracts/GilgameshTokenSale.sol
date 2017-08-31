@@ -236,9 +236,7 @@ contract GilgameshTokenSale is SafeMath{
 		owner = _newOwner;
 	}
 
-	/// @dev The fallback function is called when ether is sent to the contract, it
-	/// simply calls deposit() with the address that sent the ether as the
-	/// _owner.
+	/// @dev The fallback function is called when ether is sent to the contract
 	/// Payable is a required solidity modifier to receive ether
 	/// every contract only has one unnamed function
 	/// 2300 gas available for this function
