@@ -1,9 +1,11 @@
 # Gilgamesh Platform Smart contracts
 <img src="https://www.gilgameshplatform.com/img/logo-gilgamesh-3d.svg" width ='500' />
 
-Gilgamesh Platform is knowledge-sharing social platform powered by the Ethereum network through Smart Contracts.
+[Gilgamesh Platform](https://www.gilgameshplatform.com) is a Decentralized knowledge-sharing social platform powered by the Ethereum network through Smart Contracts.
 
-Gilgamesh Token "GIL" is an ERC20 compliant token.
+
+## GIL Token Standard
+Gilgamesh Token "GIL" is compliant with the [ERC20](https://github.com/ethereum/eips/issues/20) standard.
 
 ## Smart Contracts
  Token Contract:
@@ -15,14 +17,9 @@ Gilgamesh Token "GIL" is an ERC20 compliant token.
  Token Sale Contract:
  - [GilgameshTokenSale.sol](/contracts/GilgameshTokenSale.sol) - Gilgamesh Token Sale contract.
 
-## Running smart contracts in Development
-
-### Setting up environment
+## Install dependencies
 
 #### Install Node v8
-```sh
-nvm use 8
-```
 
 #### Install dependencies
 ```sh
@@ -39,7 +36,7 @@ npm install -g ethereumjs-testrpc
 npm install -g truffle
 ```
 
-### Deployment and Testing
+## Deployment and Testing
 
 #### Run EthereumJS TestRPC
 ```sh
@@ -63,3 +60,8 @@ truffle console
 
 ## Development
 All code is hand crafted with love by Skiral inc.
+
+## License
+Smart contracts code are released under the GPL License
+
+Copyright (C) 2017 Skiral Inc.
