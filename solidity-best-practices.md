@@ -63,3 +63,10 @@ var event = clientReceipt.Deposit(function(error, result) {
         console.log(result);
 });
 ```
+
+
+Access Smart contracts and web3 API
+```sh
+web3.eth.blockNumber //6
+GilgameshToken.at("0xb03f2fd128dc31d04ad7bf2b594ad96f27bfefcf").admin()
+```

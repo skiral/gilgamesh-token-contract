@@ -1,46 +1,65 @@
-# Gilgamesh Token Smart contracts for the initial sale http://GilgameshToken.com
+# Gilgamesh Platform Smart contracts
+<img src="https://www.gilgameshplatform.com/img/logo-gilgamesh-3d.svg" width ='500' />
 
+Gilgamesh Platform is knowledge-sharing social platform powered by the Ethereum network through Smart Contracts.
 
-Install `testrpc` Ethereum RPC client for testing and development
+Gilgamesh Token "GIL" is an ERC20 compliant token.
+
+## Smart Contracts
+ Token Contract:
+
+ - [ERC20Token.sol](/contracts/ERC20Token.sol) - Standard ERC20 Token Interface.
+ - [SecureERC20Token.sol](/contracts/SecureERC20Token.sol) - Secure ERC20 Token implementation with additional secure methods.
+ - [Gilgamesh Smart Contract.sol](/contracts/GilgameshToken.sol) - Gilgamesh Token contract.
+
+ Token Sale Contract:
+ - [GilgameshTokenSale.sol](/contracts/GilgameshTokenSale.sol) - Gilgamesh Token Sale contract.
+
+## Running smart contracts in Development
+
+### Setting up environment
+
+#### Install Node v8
 ```sh
-npm install -g ethereumjs-testrpc
+nvm use 8
 ```
 
-
-Testing smart contract
-
-Install dependencies
+#### Install dependencies
 ```sh
 npm install
 ```
 
-Install truffle globally
+#### Install `testrpc` Ethereum RPC client for testing and development
+```sh
+npm install -g ethereumjs-testrpc
+```
+
+#### Install truffle globally
 ```sh
 npm install -g truffle
 ```
 
-Compile smart contracts
-```sh
-truffle compile
-```
+### Deployment and Testing
 
-Run EthereumJS TestRPC
+#### Run EthereumJS TestRPC
 ```sh
 testrpc
 ```
 
-Deploy Smart contracts on TestRPC
+#### Compile smart contracts
+```sh
+truffle compile
+```
+
+#### Deploy Smart contracts on TestRPC
 ```sh
 truffle migrate --reset
 ```
 
-Load truffle console
+#### Load truffle console
 ```sh
 truffle console
 ```
 
-Access Smart contracts and web3 API
-```sh
-web3.eth.blockNumber //6
-GilgameshToken.at("0xb03f2fd128dc31d04ad7bf2b594ad96f27bfefcf").admin()
-```
+## Development
+All code is hand crafted with love by Skiral inc.
