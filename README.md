@@ -59,7 +59,7 @@ truffle console
 ```
 
 ## Development
-All code is hand crafted with :heart: by Skiral inc.
+All code is hand crafted with :heart: by Skiral Inc.
 
 ## License
 Smart contracts code are released under the GPL License
