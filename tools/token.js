@@ -42,7 +42,7 @@ class ContractHelper {
 
 	deployContract(params = [], fromAddress, callback = function(){}) {
 
-
+		this.deployerAddress = fromAddress;
 		params.push({
 			from: fromAddress,
 			data: this.compiledContract.bytecode,
@@ -96,6 +96,25 @@ class ContractHelper {
 	getContract() {
 		return this.contract;
 	}
+
+	logCURL(data, from = this.deployerAddress, to = this.contractAddress) {
+		var curlURL = 'curl -X POST --data ';
+		var curlData = {
+			jsonrpc: "2.0",
+			method: "eth_sendTransaction",
+			params: [{
+				from,
+				to,
+				data
+			}],
+			id: 1
+		};
+
+		curlURL += "'"+JSON.stringify(curlData) + "'" + ' http://localhost:8545';
+
+		console.log('curlURL', curlURL);
+		return curlURL;
+	}
 }
 ContractHelper.CONTRACT_SRC = '../contracts/aggregated.sol';
 ContractHelper.TOKEN_CONTRACT_NAME = 'GilgameshToken';
@@ -114,7 +133,7 @@ ContractHelper.CONTRACT_ADDRESS = '';
 	//console.log('getGasEstimate', ch.getGasEstimate());
 
 
-	/// Run below code to create a token */
+	/// 1- Run below code to create a token */
 
 	// const deployContract = bluebird.promisify(ch.deployContract, { context: ch });
 	// deployContract([], deployerAddress).then(data => {
@@ -123,24 +142,32 @@ ContractHelper.CONTRACT_ADDRESS = '';
 	// 	console.log("e", e);
 	// })
 
-	const instance = ch.getInstanceByAddress("0xaad48969c7020582c8beb65d7c008dd9d9df74b8");
-
-	// setup event handling
+	/// 2- new instance - setup event handling
+	const instance = ch.getInstanceByAddress("0x6d716febf32c95ff33f686a017d4bac524b11e49");
 	var events = instance.allEvents();
 	events.watch(function(error, result) {
 		error && console.log('instance event error', error);
 		result && console.log('instance event result', result);
 	});
 
-	/// Run below code to get instance by address - static function
+	/// 3- Run below code to get instance by address - static function
+	console.log('deployerAddress address', deployerAddress);
 	console.log("Total Supply", toTokenNumber(instance.totalSupply()));
 	console.log("admin Balance", toTokenNumber(instance.balanceOf(deployerAddress)));
 	console.log("friend Balance", toTokenNumber(instance.balanceOf(friend)));
-
+	console.log("name", instance.name());
+	console.log("symbol", instance.symbol());
+	console.log("decimals", instance.decimals().toNumber());
+	console.log("version", instance.version().toNumber());
+	console.log("admin", instance.admin());
+	console.log("minter", instance.minter());
+	console.log("creationBlock", instance.creationBlock().toNumber());
 	console.log("isTransferEnabled", instance.isTransferEnabled());
 
+	/// logging curl call
+	//ch.logCURL(instance.mint.getData(deployerAddress, genToken(1000)), deployerAddress);
 
-	/// transaction call - state changing function
+	/// 4- minting transaction call - state changing function
 	// instance.mint.sendTransaction(deployerAddress, genToken(1000), {
 	// 	from: deployerAddress,
 	// 	value: 0,
@@ -152,7 +179,21 @@ ContractHelper.CONTRACT_ADDRESS = '';
 	// 	console.log("e", e);
 	// })
 
-	/// disable token transfer
+	/// 4-1 minting by using method data.
+	// web3.eth.sendTransaction({
+	// 	data: instance.mint.getData(deployerAddress, genToken(1000)),
+	// 	from: deployerAddress,
+	// 	to: instance.address,
+	// 	value: 0,
+	// 	gasPrice: web3.eth.gasPrice,
+	// 	gas: gasEstimate
+	// }, (err, result) => {
+	// 	console.log("minting", err, result);
+	// }).then(()=> {}).catch(e => {
+	// 	console.log("e", e);
+	// })
+
+	/// 5.1- disable token transfer by admin
 	// instance.enableTransfers.sendTransaction(true, {
 	// 	from: deployerAddress,
 	// 	value: 0,
@@ -160,7 +201,15 @@ ContractHelper.CONTRACT_ADDRESS = '';
 	// 	gas: gasEstimate
 	// });
 
-	/// transfer tokens to a friend
+	/// 5.2- disable token transfer by random user - it should fail
+	// instance.enableTransfers.sendTransaction(true, {
+	// 	from: friend,
+	// 	value: 0,
+	// 	gasPrice: web3.eth.gasPrice,
+	// 	gas: gasEstimate
+	// });
+
+	/// 6- transfer tokens to a friend
 	// instance.transfer.sendTransaction(friend, genToken(400), {
 	// 	from: deployerAddress,
 	// 	value: 0,
