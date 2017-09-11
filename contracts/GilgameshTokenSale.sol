@@ -27,8 +27,8 @@ contract GilgameshTokenSale is SafeMath{
 	// Has Gilgamesh finalized the sale
 	bool public saleFinalized = false;
 
-	// Minimum investment - 0.01 Ether
-	uint256 constant public minimumInvestment = 10 finney;
+	// Minimum investment - 0.1 Ether
+	uint256 constant public minimumInvestment = 100 finney;
 
 	// Hard cap to protect the ETH network from a really high raise
 	uint256 public hardCap = 1000000 ether;
@@ -113,7 +113,7 @@ contract GilgameshTokenSale is SafeMath{
 			// minimum number of stages
 			_totalStages < 2 ||
 			// verify stage max bonus
-			_stageMaxBonusPercentage <= 0  ||
+			_stageMaxBonusPercentage < 0  ||
 			_stageMaxBonusPercentage > 100 ||
 			// stage bonus percentage needs to be devisible by number of stages
 			_stageMaxBonusPercentage % _totalStages != 0 ||

@@ -1,3 +1,4 @@
+/* eslint-disable */
 const GilgameshTokenSaleMock = artifacts.require("./GilgameshTokenSaleMock.sol");
 const GilgameshToken = artifacts.require("./GilgameshToken.sol");
 
@@ -11,7 +12,7 @@ const expect = chai.expect;
 const assertChai = chai.assert;
 
 const INVALID_OPCODE = "VM Exception while processing transaction: invalid opc";
-
+const minimumInvestment = 0.1;
 contract("TestGilgameshTokenSale", (accounts) => {
 	let token;
 
@@ -74,7 +75,116 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		return sale;
 	};
 
-	describe.skip("token be deployed sucessfully deployment", () => {
+	describe("finalizeSale() test cases", () => {
+		const tokenPrice = 2000;
+		const investedEther = 0.1; 	// 0.1 of 2000 = 200
+		const userAddress = accounts[ 1 ];
+		const giglameshTokenAddress = accounts[ 3 ];
+		const gilgameshEthAddress = accounts[ 2 ];
+		const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
+
+		it("only owner can finalize the sale", async () => {
+			const sale = await createTokenSale({
+				startBlock: 10,
+				blockNumber: 8,
+				endBlock: 100,
+				tokenPrice,
+				totalStages: 3,
+				stageMaxBonusPercentage: 18,
+				fundOwnerWallet: gilgameshEthAddress,
+				tokenOwnerWallet: giglameshTokenAddress,
+			});
+			const decimals = 10 ** (await token.decimals()).toNumber();
+
+			const gilgameshFunCurrentBalance = getBalance(gilgameshEthAddress);
+
+			await sale.setMockedBlockNumber(99);
+			await sale.deposit({
+				from: userAddress,
+				value: toWei(investedEther),
+			});
+
+			// check token contract total supply: 200
+			assert.equal(
+				toTokenNumber(await token.totalSupply.call()),
+				tokenPrice * investedEther,
+				"check token contract total supply: 200",
+			);
+
+			// check token contract user supply: 200
+			assert.equal(
+				toTokenNumber(await token.balanceOf.call(userAddress)),
+				tokenPrice * investedEther,
+				"check token contract user supply: 200",
+			);
+
+			// check total amount of Ether raised from token sale contract
+			assert.equal(
+				await sale.totalRaised(),
+				toWei(investedEther),
+				"check total amount of Ether raised from token sale contract",
+			);
+
+			// check gilgamesh dev account balance - make sure ether has been moved to gilgamesh dev account.
+			// current balance - previous balance == deposited amount
+			assert.equal(
+				getBalance(gilgameshEthAddress) - gilgameshFunCurrentBalance,
+				toWei(investedEther),
+				"Gilgamesh Dev balance should be updated",
+			);
+
+			await sale.deposit({
+				from: userAddress,
+				value: toWei(investedEther),
+			});
+
+			// check total amount of Ether raised from token sale contract
+			assert.equal(
+				await sale.totalRaised(),
+				toWei(investedEther * 2),
+				"check total amount of Ether raised from token sale contract",
+			);
+
+			// only owner can finalize the sale
+			assertChai.isRejected(
+				sale.finalizeSale.call({
+					from: userAddress,
+				}),
+			);
+
+			// owner finalize the sale
+			await sale.finalizeSale();
+
+			// sale should have been stopped
+			assert.equal(await sale.saleStopped(), true, "sale should have been stopped");
+			// sale has been finalized
+			assert.equal(await sale.saleFinalized(), true, "sale should have been finalized");
+
+			// check if giglgamesh team have received their tokens.
+			// total invested 0.2 ether = (400) token * 3 = 1200 for the team.
+			// check token contract user supply: 200
+			assert.equal(
+				toTokenNumber(await token.balanceOf.call(giglameshTokenAddress)),
+				tokenPrice * (investedEther * 2) * 3,
+				"check token contract gigamesh team user supply: 1200",
+			);
+
+			// finalizing the sale after its finalized should fail
+			assertChai.isRejected(
+				sale.finalizeSale.call(),
+			);
+
+			// future deposit should fail after sale has stopped
+			assertChai.isRejected(
+				sale.deposit({
+					from: userAddress,
+					value: toWei(investedEther),
+				}),
+			);
+		});
+	});
+
+	describe("token be deployed sucessfully deployment", () => {
 		it("default parameters", () => {
 			createTokenSale();
 		});
@@ -120,11 +230,12 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		});
 	});
 
+
 	/* ------------------------
 	 * Test Public methods
 	 * --------------------- */
 
-	describe.only("deposit() test cases", () => {
+	describe("deposit() test cases", () => {
 		it("it should fail if the sale hasn't started", async () => {
 			const sale = await createTokenSale();
 			// it should fail if the sale hasn't been started
@@ -164,7 +275,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -180,7 +291,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -196,7 +307,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -210,7 +321,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.009),
+					value: toWei(minimumInvestment - 0.01),
 				}),
 			);
 		});
@@ -224,7 +335,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: 0x0,
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -240,7 +351,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -254,7 +365,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				sale.deposit({
 					from: accounts[ 2 ],
 					gas: 200000,
-					value: toWei(0.01),
+					value: toWei(minimumInvestment),
 				}),
 			);
 		});
@@ -264,11 +375,11 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			// it should fail if the sale has reached end block
 			await sale.setMockedBlockNumber(1000);
 
-			await sale.setTotalRaised(toWei(1000000 - 0.01));
+			await sale.setTotalRaised(toWei(1000000 - minimumInvestment));
 			await sale.deposit({
 				from: accounts[ 2 ],
 				gas: 200000,
-				value: toWei(0.01),
+				value: toWei(minimumInvestment),
 			});
 
 			assert(await sale.isCapReached(), true, "cap should be reached");
@@ -443,115 +554,6 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			await sale.changeTokenOwnerWalletAddress(accounts[ 4 ]);
 
 			assert.equal(await sale.tokenOwnerWallet(), accounts[ 4 ], "verify token owner new address");
-		});
-	});
-
-	describe("finalizeSale() test cases", () => {
-		const tokenPrice = 2000;
-		const investedEther = 0.1; 	// 0.1 of 2000 = 200
-		const userAddress = accounts[ 1 ];
-		const giglameshTokenAddress = accounts[ 3 ];
-		const gilgameshEthAddress = accounts[ 2 ];
-		const toTokenNumber = bNumber => bNumber.dividedBy(10 ** 18).toNumber();
-
-		it("only owner can finalize the sale", async () => {
-			const sale = await createTokenSale({
-				startBlock: 10,
-				blockNumber: 8,
-				endBlock: 100,
-				tokenPrice,
-				totalStages: 3,
-				stageMaxBonusPercentage: 18,
-				fundOwnerWallet: gilgameshEthAddress,
-				tokenOwnerWallet: giglameshTokenAddress,
-			});
-			const decimals = 10 ** (await token.decimals()).toNumber();
-
-			const gilgameshFunCurrentBalance = getBalance(gilgameshEthAddress);
-
-			await sale.setMockedBlockNumber(99);
-			await sale.deposit({
-				from: userAddress,
-				value: toWei(investedEther),
-			});
-
-			// check token contract total supply: 200
-			assert.equal(
-				toTokenNumber(await token.totalSupply.call()),
-				tokenPrice * investedEther,
-				"check token contract total supply: 200",
-			);
-
-			// check token contract user supply: 200
-			assert.equal(
-				toTokenNumber(await token.balanceOf.call(userAddress)),
-				tokenPrice * investedEther,
-				"check token contract user supply: 200",
-			);
-
-			// check total amount of Ether raised from token sale contract
-			assert.equal(
-				await sale.totalRaised(),
-				toWei(investedEther),
-				"check total amount of Ether raised from token sale contract",
-			);
-
-			// check gilgamesh dev account balance - make sure ether has been moved to gilgamesh dev account.
-			// current balance - previous balance == deposited amount
-			assert.equal(
-				getBalance(gilgameshEthAddress) - gilgameshFunCurrentBalance,
-				toWei(investedEther),
-				"Gilgamesh Dev balance should be updated",
-			);
-
-			await sale.deposit({
-				from: userAddress,
-				value: toWei(investedEther),
-			});
-
-			// check total amount of Ether raised from token sale contract
-			assert.equal(
-				await sale.totalRaised(),
-				toWei(investedEther * 2),
-				"check total amount of Ether raised from token sale contract",
-			);
-
-			// only owner can finalize the sale
-			assertChai.isRejected(
-				sale.finalizeSale.call({
-					from: userAddress,
-				}),
-			);
-
-			// owner finalize the sale
-			await sale.finalizeSale();
-
-			// sale should have been stopped
-			assert.equal(await sale.saleStopped(), true, "sale should have been stopped");
-			// sale has been finalized
-			assert.equal(await sale.saleFinalized(), true, "sale should have been finalized");
-
-			// check if giglgamesh team have received their tokens.
-			// total invested 0.2 ether = (400) token * 3 = 1200 for the team.
-			// check token contract user supply: 200
-			assert.equal(
-				toTokenNumber(await token.balanceOf.call(giglameshTokenAddress)),
-				tokenPrice * (investedEther * 2) * 3,
-				"check token contract gigamesh team user supply: 1200",
-			);
-
-			// finalizing the sale after its finalized should fail
-			assertChai.isRejected(
-				sale.finalizeSale.call(),
-			);
-
-			// future deposit should fail after sale has stopped
-			assertChai.isRejected(
-				sale.deposit({
-					from: userAddress,
-					value: toWei(investedEther),
-				}),
-			);
 		});
 	});
 
@@ -851,6 +853,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			assert.equal(await getStageByBlockNumber(17), 8);
 			assert.equal(await getStageByBlockNumber(18), 9);
 			assert.equal(await getStageByBlockNumber(19), 10);
+
 		});
 	});
 
@@ -895,6 +898,35 @@ contract("TestGilgameshTokenSale", (accounts) => {
 
 			// 1000 + 20% profit = 1200
 			assert.equal(totalTokens, 1200);
+
+			await sale.setMockedBlockNumber(99);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
+
+			assert.equal(totalTokens, 1000);
+		});
+
+
+		it("calculate tokesn for 2 stages and 0% max bonus", async () => {
+			const tokenPrice = 1000;
+			const totalStages = 2;
+			const stageMaxBonusPercentage = 0;
+
+			const sale = await createTokenSale({
+				startBlock: 20,
+				endBlock: 100,
+				tokenPrice, // 1 ether gives you 1000 tokens
+				totalStages,
+				stageMaxBonusPercentage,
+			});
+
+			const oneEther = toWei(1);
+			const decimals = 10 ** 18;
+
+			await sale.setMockedBlockNumber(20);
+			let totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
+
+			// 1000 + 0% profit = 1200
+			assert.equal(totalTokens, 1000);
 
 			await sale.setMockedBlockNumber(99);
 			totalTokens = (await sale.calculateTokensMock.call(oneEther)).dividedBy(decimals).toNumber();
