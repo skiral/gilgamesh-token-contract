@@ -117,7 +117,7 @@ class ContractHelper {
 		return curlURL;
 	}
 }
-ContractHelper.CONTRACT_SRC = '../contracts/aggregated.sol';
+ContractHelper.CONTRACT_SRC = './aggregated.sol';
 ContractHelper.TOKEN_CONTRACT_NAME = 'GilgameshToken';
 ContractHelper.CONTRACT_ADDRESS = '';
 

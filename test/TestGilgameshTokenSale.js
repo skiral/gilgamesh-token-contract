@@ -2,8 +2,6 @@
 const GilgameshTokenSaleMock = artifacts.require("./GilgameshTokenSaleMock.sol");
 const GilgameshToken = artifacts.require("./GilgameshToken.sol");
 
-const MetaCoin = artifacts.require("./MetaCoin.sol");
-
 const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");
 
@@ -59,6 +57,8 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		} catch (e) {
 			throw new Error(e);
 		}
+
+
 
 		assert.equal(await sale.startBlock(), startBlock, "`startBlock` should match");
 		assert.equal(await sale.endBlock(), endBlock, "`endBlock` should match");

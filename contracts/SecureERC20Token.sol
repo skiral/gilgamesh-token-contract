@@ -12,6 +12,9 @@ contract SecureERC20Token is ERC20Token {
 	// balances dictionary that maps addresses to balances
 	mapping (address => uint256) private balances;
 
+	// locked account dictionary that maps addresses to boolean
+	mapping (address => bool) private lockedAccounts;
+
 	 // allowed dictionary that allow transfer rights to other addresses.
 	mapping (address => mapping(address => uint256)) private allowed;
 
@@ -115,7 +118,9 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
-	function approve(address _spender, uint256 _value) returns (bool success) {
+	function approve(address _spender, uint256 _value)
+	is_not_locked(_spender)
+	returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
@@ -158,16 +163,38 @@ contract SecureERC20Token is ERC20Token {
 
 	/* Public Methods */
 
+	/// @notice only the admin is allowed to lock accounts.
+	/// @param _owner the address of the account to be locked
+	function lockAccount(address _owner)
+	is_not_locked(_owner)
+	validate_address(_owner)
+	onlyAdmin {
+		lockedAccounts[_owner] = true;
+	}
+
+	/// @notice only the admin is allowed to unlock accounts.
+	/// @param _owner the address of the account to be unlocked
+	function unlockAccount(address _owner)
+	is_locked(_owner)
+	validate_address(_owner)
+	onlyAdmin {
+		lockedAccounts[_owner] = false;
+	}
+
 	/// @notice only the admin is allowed to change the minter.
 	/// @param newMinter the address of the minter
-	function changeMinter(address newMinter) onlyAdmin {
+	function changeMinter(address newMinter)
+	validate_address(newMinter)
+	onlyAdmin {
 		if (minter == newMinter) revert();
 		minter = newMinter;
 	}
 
 	/// @notice only the admin is allowed to change the admin.
 	/// @param newAdmin the address of the new admin
-	function changeAdmin(address newAdmin) onlyAdmin {
+	function changeAdmin(address newAdmin)
+	validate_address(newAdmin)
+	onlyAdmin {
 		if (admin == newAdmin) revert();
 		admin = newAdmin;
 	}
@@ -177,6 +204,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _amount the amount of new token to be minted
 	function mint(address _owner, uint256 _amount)
 	onlyMinter
+	validate_address(_owner)
 	returns (bool success) {
 		// preventing overflow on the totalSupply
 		if (totalSupply + _amount < totalSupply) revert();
@@ -212,6 +240,8 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
 	function doTransfer(address _from, address _to, uint256 _value)
+	validate_address(_to)
+	is_not_locked(_from)
 	internal
 	returns (bool success) {
 		if (
@@ -253,6 +283,21 @@ contract SecureERC20Token is ERC20Token {
 		// if sender is not the admin stop the execution
 		if (msg.sender != admin) revert();
 		// if the sender is the admin continue
+		_;
+	}
+
+	modifier validate_address(address _address) {
+		if (_address == 0x0) revert();
+		_;
+	}
+
+	modifier is_not_locked(address _address) {
+		if (lockedAccounts[_address] == true) revert();
+		_;
+	}
+
+	modifier is_locked(address _address) {
+		if (lockedAccounts[_address] != true) revert();
 		_;
 	}
 }
