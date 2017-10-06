@@ -46,6 +46,10 @@ contract SecureERC20Token is ERC20Token {
 	// disable actionable ERC20 token methods
 	bool public isTransferEnabled;
 
+	event AdminOwnershipTransferred(address indexed previousAdmin, address indexed newAdmin);
+	event MinterOwnershipTransferred(address indexed previousMinter, address indexed newMinter);
+	event TransferStatus(address indexed sender, bool status);
+
 	// @notice Constructor to create Gilgamesh ERC20 Token
 	function SecureERC20Token(
 		uint256 initialSupply,
@@ -187,6 +191,7 @@ contract SecureERC20Token is ERC20Token {
 	validate_address(newMinter)
 	onlyAdmin {
 		if (minter == newMinter) revert();
+		MinterOwnershipTransferred(minter, newMinter);
 		minter = newMinter;
 	}
 
@@ -196,6 +201,7 @@ contract SecureERC20Token is ERC20Token {
 	validate_address(newAdmin)
 	onlyAdmin {
 		if (admin == newAdmin) revert();
+		AdminOwnershipTransferred(admin, newAdmin);
 		admin = newAdmin;
 	}
 
@@ -218,8 +224,11 @@ contract SecureERC20Token is ERC20Token {
 		// assign the additional supply to the target account.
 		balances[_owner] += _amount;
 
-		// contract has transfered token to the target account
-		Transfer(this, _owner, _amount);
+		// contract has minted new token by the minter
+		Transfer(0x0, msg.sender, _amount);
+
+		// minter has transferred token to the target account
+		Transfer(msg.sender, _owner, _amount);
 
 		return true;
 	}
@@ -230,6 +239,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _isTransferEnabled boolean
 	function enableTransfers(bool _isTransferEnabled) onlyAdmin {
 		isTransferEnabled = _isTransferEnabled;
+		TransferStatus(msg.sender, isTransferEnabled);
 	}
 
 	/* Internal Methods */
@@ -287,7 +297,7 @@ contract SecureERC20Token is ERC20Token {
 	}
 
 	modifier validate_address(address _address) {
-		if (_address == 0x0) revert();
+		if (_address == address(0)) revert();
 		_;
 	}
 
