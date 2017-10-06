@@ -58,6 +58,11 @@ truffle migrate --reset
 truffle console
 ```
 
+#### Testing
+```sh
+truffle test
+```
+
 ## Development
 All code is hand crafted with :heart: by Skiral Inc.
 
