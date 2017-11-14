@@ -6,7 +6,7 @@
 
 // ERC20 compliant token interface
 // Wallets and Exchanges can easily use a ERC20 compliant token.
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 contract ERC20Token {
 
@@ -26,17 +26,17 @@ contract ERC20Token {
 	// ---------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 _totalSupply);
+	function totalSupply() public constant returns (uint256 _totalSupply);
 
 	/// @notice Get the account balance of address _owner
 	/// @param _owner The address from which the balance will be retrieved
 	/// @return The balance
-	function balanceOf(address _owner) constant returns (uint256 balance);
+	function balanceOf(address _owner) public constant returns (uint256 balance);
 
 	/// @param _owner The address of the account owning tokens
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @return Amount of remaining tokens allowed to spent by the _spender from _owner account
-	function allowance(address _owner, address _spender) constant returns (uint256 remaining);
+	function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
 
 	// --------
 	//	Actions
@@ -46,19 +46,19 @@ contract ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transfer(address _to, uint256 _value) returns (bool success);
+	function transfer(address _to, uint256 _value) public returns (bool success);
 
 	/// @notice send _value amount of tokens to _to address from _from address, on the condition it is approved by _from
 	/// @param _from The address of the sender
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
+	function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
 
 	/// @notice msg.sender approves _spender to spend multiple times up to _value amount of tokens
 	/// If this function is called again it overwrites the current allowance with _value.
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
-	function approve(address _spender, uint256 _value) returns (bool success);
+	function approve(address _spender, uint256 _value) public returns (bool success);
 }

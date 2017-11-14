@@ -1,7 +1,7 @@
 /*
 	Copyright 2017, Skiral Inc
 */
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "./ERC20Token.sol";
 
@@ -57,7 +57,7 @@ contract SecureERC20Token is ERC20Token {
 		string _symbol,
 		uint8 _decimals,
 		bool _isTransferEnabled
-	) {
+	) public {
 		// assign all tokens to the deployer
 		balances[msg.sender] = initialSupply;
 
@@ -76,14 +76,14 @@ contract SecureERC20Token is ERC20Token {
 	// --------------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 _totalSupply) {
+	function totalSupply() public constant returns (uint256 _totalSupply) {
 		return totalSupply;
 	}
 
 	/// @notice Get the account balance of address _owner
 	/// @param _owner The address from which the balance will be retrieved
 	/// @return The balance
-	function balanceOf(address _owner) constant returns (uint256 balance) {
+	function balanceOf(address _owner) public constant returns (uint256 balance) {
 		return balances[_owner];
 	}
 
@@ -91,7 +91,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transfer(address _to, uint256 _value) returns (bool success) {
+	function transfer(address _to, uint256 _value) public returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
@@ -104,7 +104,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+	function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
@@ -123,6 +123,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
 	function approve(address _spender, uint256 _value)
+	public
 	is_not_locked(_spender)
 	returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
@@ -156,6 +157,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @return Amount of remaining tokens allowed to spent by the _spender from _owner account
 	function allowance(address _owner, address _spender)
+	public
 	constant
 	returns (uint256 remaining) {
 		return allowed[_owner][_spender];
@@ -170,6 +172,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to lock accounts.
 	/// @param _owner the address of the account to be locked
 	function lockAccount(address _owner)
+	public
 	is_not_locked(_owner)
 	validate_address(_owner)
 	onlyAdmin {
@@ -179,6 +182,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to unlock accounts.
 	/// @param _owner the address of the account to be unlocked
 	function unlockAccount(address _owner)
+	public
 	is_locked(_owner)
 	validate_address(_owner)
 	onlyAdmin {
@@ -188,6 +192,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to change the minter.
 	/// @param newMinter the address of the minter
 	function changeMinter(address newMinter)
+	public
 	validate_address(newMinter)
 	onlyAdmin {
 		if (minter == newMinter) revert();
@@ -198,6 +203,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to change the admin.
 	/// @param newAdmin the address of the new admin
 	function changeAdmin(address newAdmin)
+	public
 	validate_address(newAdmin)
 	onlyAdmin {
 		if (admin == newAdmin) revert();
@@ -209,6 +215,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _owner the owner of the newly tokens
 	/// @param _amount the amount of new token to be minted
 	function mint(address _owner, uint256 _amount)
+	public
 	onlyMinter
 	validate_address(_owner)
 	returns (bool success) {
@@ -237,7 +244,7 @@ contract SecureERC20Token is ERC20Token {
 	/// after the crowdsale is finished it will be true
 	/// for security reasons can be switched to false
 	/// @param _isTransferEnabled boolean
-	function enableTransfers(bool _isTransferEnabled) onlyAdmin {
+	function enableTransfers(bool _isTransferEnabled) public onlyAdmin {
 		isTransferEnabled = _isTransferEnabled;
 		TransferStatus(msg.sender, isTransferEnabled);
 	}

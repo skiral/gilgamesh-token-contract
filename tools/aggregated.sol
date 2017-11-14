@@ -1,25 +1,25 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 contract SafeMath {
 
-	function safeAdd(uint256 a, uint256 b) internal returns (uint256) {
+	function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
 		uint256 c = a + b;
 		assert(c >= a && c >= b);
 		return c;
 	}
 
-	function safeSub(uint256 a, uint256 b) internal returns (uint256) {
+	function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
 		assert(b <= a);
 		return a - b;
 	}
 
-	function safeMul(uint256 a, uint256 b) internal returns (uint256) {
+	function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
 		uint256 c = a * b;
 		assert(a == 0 || c / a == b);
 		return c;
 	}
 
-	function safeDiv(uint256 a, uint256 b) internal returns (uint256) {
+	function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
 		assert(b > 0);
 		uint256 c = a / b;
 		assert(a == b * c + a % b);
@@ -27,8 +27,14 @@ contract SafeMath {
 	}
 }
 
+/*
+	Copyright 2017, Skiral Inc
+*/
 
+// https://github.com/ethereum/EIPs/issues/20
 
+// ERC20 compliant token interface
+// Wallets and Exchanges can easily use a ERC20 compliant token.
 contract ERC20Token {
 
 	// --------
@@ -47,17 +53,17 @@ contract ERC20Token {
 	// ---------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 _totalSupply);
+	function totalSupply() public constant returns (uint256 _totalSupply);
 
 	/// @notice Get the account balance of address _owner
 	/// @param _owner The address from which the balance will be retrieved
 	/// @return The balance
-	function balanceOf(address _owner) constant returns (uint256 balance);
+	function balanceOf(address _owner) public constant returns (uint256 balance);
 
 	/// @param _owner The address of the account owning tokens
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @return Amount of remaining tokens allowed to spent by the _spender from _owner account
-	function allowance(address _owner, address _spender) constant returns (uint256 remaining);
+	function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
 
 	// --------
 	//	Actions
@@ -67,22 +73,26 @@ contract ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transfer(address _to, uint256 _value) returns (bool success);
+	function transfer(address _to, uint256 _value) public returns (bool success);
 
 	/// @notice send _value amount of tokens to _to address from _from address, on the condition it is approved by _from
 	/// @param _from The address of the sender
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
+	function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
 
 	/// @notice msg.sender approves _spender to spend multiple times up to _value amount of tokens
 	/// If this function is called again it overwrites the current allowance with _value.
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
-	function approve(address _spender, uint256 _value) returns (bool success);
+	function approve(address _spender, uint256 _value) public returns (bool success);
 }
+
+/*
+	Copyright 2017, Skiral Inc
+*/
 
 contract SecureERC20Token is ERC20Token {
 
@@ -136,7 +146,7 @@ contract SecureERC20Token is ERC20Token {
 		string _symbol,
 		uint8 _decimals,
 		bool _isTransferEnabled
-	) {
+	) public {
 		// assign all tokens to the deployer
 		balances[msg.sender] = initialSupply;
 
@@ -155,14 +165,14 @@ contract SecureERC20Token is ERC20Token {
 	// --------------
 
 	/// @notice Get the total amount of token supply
-	function totalSupply() constant returns (uint256 _totalSupply) {
+	function totalSupply() public constant returns (uint256 _totalSupply) {
 		return totalSupply;
 	}
 
 	/// @notice Get the account balance of address _owner
 	/// @param _owner The address from which the balance will be retrieved
 	/// @return The balance
-	function balanceOf(address _owner) constant returns (uint256 balance) {
+	function balanceOf(address _owner) public constant returns (uint256 balance) {
 		return balances[_owner];
 	}
 
@@ -170,7 +180,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transfer(address _to, uint256 _value) returns (bool success) {
+	function transfer(address _to, uint256 _value) public returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
@@ -183,7 +193,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _to The address of the recipient
 	/// @param _value The amount of token to be transferred
 	/// @return a boolean - whether the transfer was successful or not
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+	function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
 		require(isTransferEnabled);
 
@@ -202,6 +212,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _value The amount of tokens to be approved for transfer
 	/// @return a boolean - whether the approval was successful or not
 	function approve(address _spender, uint256 _value)
+	public
 	is_not_locked(_spender)
 	returns (bool success) {
 		// if transfer is not enabled throw an error and stop execution.
@@ -235,6 +246,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _spender The address of the account able to transfer the tokens
 	/// @return Amount of remaining tokens allowed to spent by the _spender from _owner account
 	function allowance(address _owner, address _spender)
+	public
 	constant
 	returns (uint256 remaining) {
 		return allowed[_owner][_spender];
@@ -249,6 +261,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to lock accounts.
 	/// @param _owner the address of the account to be locked
 	function lockAccount(address _owner)
+	public
 	is_not_locked(_owner)
 	validate_address(_owner)
 	onlyAdmin {
@@ -258,6 +271,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to unlock accounts.
 	/// @param _owner the address of the account to be unlocked
 	function unlockAccount(address _owner)
+	public
 	is_locked(_owner)
 	validate_address(_owner)
 	onlyAdmin {
@@ -267,6 +281,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to change the minter.
 	/// @param newMinter the address of the minter
 	function changeMinter(address newMinter)
+	public
 	validate_address(newMinter)
 	onlyAdmin {
 		if (minter == newMinter) revert();
@@ -277,6 +292,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @notice only the admin is allowed to change the admin.
 	/// @param newAdmin the address of the new admin
 	function changeAdmin(address newAdmin)
+	public
 	validate_address(newAdmin)
 	onlyAdmin {
 		if (admin == newAdmin) revert();
@@ -288,6 +304,7 @@ contract SecureERC20Token is ERC20Token {
 	/// @param _owner the owner of the newly tokens
 	/// @param _amount the amount of new token to be minted
 	function mint(address _owner, uint256 _amount)
+	public
 	onlyMinter
 	validate_address(_owner)
 	returns (bool success) {
@@ -316,7 +333,7 @@ contract SecureERC20Token is ERC20Token {
 	/// after the crowdsale is finished it will be true
 	/// for security reasons can be switched to false
 	/// @param _isTransferEnabled boolean
-	function enableTransfers(bool _isTransferEnabled) onlyAdmin {
+	function enableTransfers(bool _isTransferEnabled) public onlyAdmin {
 		isTransferEnabled = _isTransferEnabled;
 		TransferStatus(msg.sender, isTransferEnabled);
 	}
@@ -395,6 +412,7 @@ contract SecureERC20Token is ERC20Token {
 contract GilgameshToken is SecureERC20Token {
 	// @notice Constructor to create Gilgamesh ERC20 Token
 	function GilgameshToken()
+	public
 	SecureERC20Token(
 		0, // no token in the begning
 		"Gilgamesh Token", // Token Name
@@ -402,10 +420,12 @@ contract GilgameshToken is SecureERC20Token {
 		18, // Decimals
 		true // Enable token transfer
 	) {}
-
 }
 
 
+/*
+	Copyright 2017, Skiral Inc
+*/
 contract GilgameshTokenSale is SafeMath{
 
 	// creationBlock is the block number that the Token was created
@@ -501,6 +521,7 @@ contract GilgameshTokenSale is SafeMath{
 		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
 		uint256 _minimumCap // minimum cap, minimum amount of wei to be raised
 	)
+	public
 	validate_address(_fundOwnerWallet) {
 
 		if (
@@ -513,7 +534,7 @@ contract GilgameshTokenSale is SafeMath{
 			// minimum number of stages
 			_totalStages < 2 ||
 			// verify stage max bonus
-			_stageMaxBonusPercentage <= 0  ||
+			_stageMaxBonusPercentage < 0  ||
 			_stageMaxBonusPercentage > 100 ||
 			// stage bonus percentage needs to be devisible by number of stages
 			_stageMaxBonusPercentage % _totalStages != 0 ||
@@ -631,14 +652,13 @@ contract GilgameshTokenSale is SafeMath{
 	/// @param _newOwner the address of the new owner
 	function changeOwner(address _newOwner)
 	public
+	validate_address(_newOwner)
 	onlyOwner {
 		require(_newOwner != owner);
 		owner = _newOwner;
 	}
 
-	/// @dev The fallback function is called when ether is sent to the contract, it
-	/// simply calls deposit() with the address that sent the ether as the
-	/// _owner.
+	/// @dev The fallback function is called when ether is sent to the contract
 	/// Payable is a required solidity modifier to receive ether
 	/// every contract only has one unnamed function
 	/// 2300 gas available for this function
@@ -692,6 +712,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice calculate number tokens need to be issued based on the amount received
 	/// @param amount number of wei received
 	function calculateTokens(uint256 amount)
+	view
 	internal
 	returns (uint256) {
 		// return 0 if the crowd fund has ended or it hasn't started
@@ -716,6 +737,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @param stageNumber number of current stage in the crowd fund process
 	function calculateRewardTokens(uint256 amount, uint8 stageNumber)
 	internal
+	view
 	returns (uint256 rewardAmount) {
 		// throw if it's invalid stage number
 		if (
@@ -733,6 +755,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice get crowd fund stage by block number
 	/// @param _blockNumber block number
 	function getStageByBlockNumber(uint256 _blockNumber)
+	view
 	internal
 	returns (uint8) {
 		// throw error, if block number is out of range
@@ -748,6 +771,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice check if the block number is during the sale period
 	/// @param _blockNumber block number
 	function isDuringSalePeriod(uint256 _blockNumber)
+	view
 	internal
 	returns (bool) {
 		return (_blockNumber >= startBlock && _blockNumber < endBlock);

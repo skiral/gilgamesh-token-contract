@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "./SafeMath.sol";
 import "./GilgameshToken.sol";
@@ -101,6 +101,7 @@ contract GilgameshTokenSale is SafeMath{
 		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
 		uint256 _minimumCap // minimum cap, minimum amount of wei to be raised
 	)
+	public
 	validate_address(_fundOwnerWallet) {
 
 		if (
@@ -291,6 +292,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice calculate number tokens need to be issued based on the amount received
 	/// @param amount number of wei received
 	function calculateTokens(uint256 amount)
+	view
 	internal
 	returns (uint256) {
 		// return 0 if the crowd fund has ended or it hasn't started
@@ -315,6 +317,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @param stageNumber number of current stage in the crowd fund process
 	function calculateRewardTokens(uint256 amount, uint8 stageNumber)
 	internal
+	view
 	returns (uint256 rewardAmount) {
 		// throw if it's invalid stage number
 		if (
@@ -332,6 +335,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice get crowd fund stage by block number
 	/// @param _blockNumber block number
 	function getStageByBlockNumber(uint256 _blockNumber)
+	view
 	internal
 	returns (uint8) {
 		// throw error, if block number is out of range
@@ -347,6 +351,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice check if the block number is during the sale period
 	/// @param _blockNumber block number
 	function isDuringSalePeriod(uint256 _blockNumber)
+	view
 	internal
 	returns (bool) {
 		return (_blockNumber >= startBlock && _blockNumber < endBlock);
