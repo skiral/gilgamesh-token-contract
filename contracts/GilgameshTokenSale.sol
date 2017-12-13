@@ -121,7 +121,7 @@ contract GilgameshTokenSale is SafeMath{
 			_stageMaxBonusPercentage < 0  ||
 			_stageMaxBonusPercentage > 100 ||
 			// stage bonus percentage needs to be devisible by number of stages
-			_stageMaxBonusPercentage % _totalStages != 0 ||
+			_stageMaxBonusPercentage % (_totalStages - 1) != 0 ||
 			// total number of blocks needs to be devisible by the total stages
 			(_endBlock - _startBlock) % _totalStages != 0
 		) revert();
