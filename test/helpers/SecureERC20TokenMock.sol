@@ -14,6 +14,7 @@ contract SecureERC20TokenMock is SecureERC20Token {
 		uint8 _decimals,
 		bool _isTransferEnabled
 	)
+	public
 	SecureERC20Token(
 		initialSupply,
 		_name,

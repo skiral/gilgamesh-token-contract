@@ -21,6 +21,7 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 		uint256 _tokenCap // tokenCap
 
 	)
+	public
 	GilgameshTokenSale(
 		_startBlock,
 		_endBlock,
@@ -46,24 +47,25 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 		return mock_blockNumber;
 	}
 
-	function setMockedBlockNumber(uint b) {
+	function setMockedBlockNumber(uint b) public {
 		mock_blockNumber = b;
 	}
 
 	// mock internal methods
-	function isDuringSalePeriodMock(uint256 _blockNumber) public returns (bool) {
+	function isDuringSalePeriodMock(uint256 _blockNumber) public view returns (bool) {
 		return isDuringSalePeriod(_blockNumber);
 	}
 
-	function getStageByBlockNumberMock(uint256 _blockNumber) public returns (uint8) {
+	function getStageByBlockNumberMock(uint256 _blockNumber) public view returns (uint8) {
 		return getStageByBlockNumber(_blockNumber);
 	}
 
-	function calculateTokensMock(uint256 amount) public returns (uint256) {
+	function calculateTokensMock(uint256 amount) public view returns (uint256) {
 		return calculateTokens(amount);
 	}
 
 	function calculateRewardTokensMock(uint256 amount, uint8 stageNumber)
+	view
 	public
 	returns (uint256 rewardAmount) {
 		return calculateRewardTokens(amount, stageNumber);

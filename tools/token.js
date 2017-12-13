@@ -89,9 +89,10 @@ class ContractHelper {
 
 	getGasEstimate() {
 		let bytecode = this.compiledContract.bytecode;
-		return web3.eth.estimateGas({
-			data: bytecode
-		});
+		// return web3.eth.estimateGas({
+		// 	data: bytecode
+		// });
+		return 1000000;
 	}
 
 	getContract() {
