@@ -17,7 +17,9 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 		uint256 _tokenPrice, // price of each token in wei
 		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
 		uint256 _minimumCap, // minimum cap, minimum amount of wei to be raised
-		uint256 _blockNumber // current block number
+		uint256 _blockNumber, // current block number
+		uint256 _tokenCap // tokenCap
+
 	)
 	GilgameshTokenSale(
 		_startBlock,
@@ -28,7 +30,8 @@ contract GilgameshTokenSaleMock is GilgameshTokenSale {
 		_stageMaxBonusPercentage,
 		_tokenPrice,
 		_gilgameshToken,
-		_minimumCap
+		_minimumCap,
+		_tokenCap
 	) {
 		// in case we want to override the block number
 		if (_blockNumber != 1) {

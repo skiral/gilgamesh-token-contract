@@ -33,6 +33,9 @@ contract GilgameshTokenSale is SafeMath{
 	// Hard cap to protect the ETH network from a really high raise
 	uint256 public hardCap = 1000000 ether;
 
+	// number of tokens for sale
+	uint256 public tokenCap = 2400000000 * 10**18;
+
 	// minimum cap
 	uint256 public minimumCap = 5000 ether;
 
@@ -99,7 +102,8 @@ contract GilgameshTokenSale is SafeMath{
 		uint8 _stageMaxBonusPercentage, // maximum percentage for bonus in the first stage
 		uint256 _tokenPrice, // price of each token in wei
 		address _gilgameshToken, // address of the gilgamesh ERC20 token contract
-		uint256 _minimumCap // minimum cap, minimum amount of wei to be raised
+		uint256 _minimumCap, // minimum cap, minimum amount of wei to be raised
+		uint256 _tokenCap // tokenCap
 	)
 	validate_address(_fundOwnerWallet) {
 
@@ -133,6 +137,7 @@ contract GilgameshTokenSale is SafeMath{
 		minimumCap = _minimumCap;
 		stageMaxBonusPercentage = _stageMaxBonusPercentage;
 		totalRaised = 0; //	total number of wei raised
+		tokenCap = _tokenCap;
 
 		// spread bonuses evenly between stages - e.g 20 / 4 = 5%
 		uint spread = stageMaxBonusPercentage / (totalStages - 1);
@@ -261,6 +266,9 @@ contract GilgameshTokenSale is SafeMath{
 		// if user tokens are 0 throw
 		if (userAssignedTokens <= 0) revert();
 
+		// if number of tokens exceed the token cap stop execution
+		if (token.totalSupply() + userAssignedTokens > tokenCap) revert();
+
 		// send funds to fund owner wallet
 		if (!fundOwnerWallet.send(msg.value)) revert();
 
@@ -272,6 +280,11 @@ contract GilgameshTokenSale is SafeMath{
 
 		// if cap is reached mark it
 		if (totalRaised >= hardCap) {
+			isCapReached = true;
+		}
+
+		// if token supply has exceeded token cap stop
+		if (token.totalSupply() >= tokenCap) {
 			isCapReached = true;
 		}
 

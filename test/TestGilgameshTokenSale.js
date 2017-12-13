@@ -34,6 +34,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 		owner = accounts[ 0 ],
 		gilgameshToken,
 		blockNumber = 1,
+		tokenCap = 240000 * 10**18
 	} = {}) => {
 		gilgameshToken = gilgameshToken === undefined ? token.address : gilgameshToken;
 
@@ -48,6 +49,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			gilgameshToken, // address of the gilgamesh ERC20 token contract
 			minimumCap, // minimum cap, minimum amount of wei to be raised
 			blockNumber, // override the current block number
+			tokenCap // token cap
 		];
 
 		let sale;

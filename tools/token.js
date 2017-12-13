@@ -139,6 +139,12 @@ function objToArr(obj) {
 
 	const gasEstimate = ch.getGasEstimate();
 	const gas = 200 * 1000;
+
+
+	const ch3 = new ContractHelper(ContractHelper.CONTRACT_SRC, 'GilgameshShakespeareVoting');
+	console.log("test", ch3.getCompiledContract().bytecode);
+
+
 	//console.log('getGasEstimate', ch.getGasEstimate());
 
 
