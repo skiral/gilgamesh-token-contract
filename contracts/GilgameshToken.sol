@@ -14,7 +14,7 @@ contract GilgameshToken is SecureERC20Token {
 		"Gilgamesh Token", // Token Name
 		"GIL", // Token Symbol
 		18, // Decimals
-		true // Enable token transfer
+		false // Enable token transfer
 	) {}
 
 }
