@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.18;
 
 contract SafeMath {
 
@@ -35,6 +35,7 @@ contract SafeMath {
 
 // ERC20 compliant token interface
 // Wallets and Exchanges can easily use a ERC20 compliant token.
+pragma solidity ^0.4.18;
 
 contract ERC20Token {
 
@@ -91,10 +92,6 @@ contract ERC20Token {
 	function approve(address _spender, uint256 _value) public returns (bool success);
 }
 
-
-/*
-	Copyright 2017, Skiral Inc
-*/
 
 contract SecureERC20Token is ERC20Token {
 
@@ -411,7 +408,6 @@ contract SecureERC20Token is ERC20Token {
 }
 
 
-
 contract GilgameshToken is SecureERC20Token {
 	// @notice Constructor to create Gilgamesh ERC20 Token
 	function GilgameshToken()
@@ -423,11 +419,9 @@ contract GilgameshToken is SecureERC20Token {
 		18, // Decimals
 		true // Enable token transfer
 	) {}
+
 }
 
-/*
-	Copyright 2017, Skiral Inc
-*/
 contract GilgameshTokenSale is SafeMath{
 
 	// creationBlock is the block number that the Token was created
@@ -477,7 +471,7 @@ contract GilgameshTokenSale is SafeMath{
 	uint[] public stageBonusPercentage;
 
 	// number of participants
-	uint128 public totalParticipants;
+	uint256 public totalParticipants;
 
 	// a map of userId to wei
 	mapping(uint256 => uint256) public paymentsByUserId;
@@ -515,6 +509,7 @@ contract GilgameshTokenSale is SafeMath{
 	// log each contribution
 	event LogContribution(
 		address contributorAddress,
+		address invokerAddress,
 		uint256 amount,
 		uint256 totalRaised,
 		uint256 userAssignedTokens,
@@ -737,18 +732,20 @@ contract GilgameshTokenSale is SafeMath{
 		}
 
 		// increase the number of participants for the first transaction
-		if(paymentsByUserId[userId] == 0) {
+		if (paymentsByUserId[userId] == 0) {
 			totalParticipants++;
 		}
 
 		// increase the amount that the user has payed
 		paymentsByUserId[userId] += msg.value;
 
+		// total wei based on address
 		paymentsByAddress[userAddress] += msg.value;
 
 		// log contribution event
 		LogContribution(
 			userAddress,
+			msg.sender,
 			msg.value,
 			totalRaised,
 			userAssignedTokens,

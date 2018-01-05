@@ -22,14 +22,17 @@ class ContractHelper {
 	) {
 		const source = fs.readFileSync(contractSrc, 'utf8');
 		this.compiledContracts = solc.compile(source, 1);
-
 		this.compiledContract = this.compiledContracts.contracts[':' + contractName];
 
 		// Application Binary Interface (ABI)
-		const abiArray = JSON.parse(this.compiledContract.interface);
+		this.abiArray = JSON.parse(this.compiledContract.interface);
 
 		// creation of contract object
-		this.contract = web3.eth.contract(abiArray);
+		this.contract = web3.eth.contract(this.abiArray);
+	}
+
+	getContractAbi() {
+		return this.abiArray;
 	}
 
 	setContractByAbi(abiArray) {
@@ -142,11 +145,11 @@ function objToArr(obj) {
 	const gas = 200 * 1000;
 
 
-	const ch3 = new ContractHelper(ContractHelper.CONTRACT_SRC, 'GilgameshShakespeareVoting');
-	console.log("test", ch3.getCompiledContract().bytecode);
+	// const ch3 = new ContractHelper(ContractHelper.CONTRACT_SRC, 'GilgameshShakespeareVoting');
+	// console.log("test", ch3.getCompiledContract().bytecode);
 
 
-	//console.log('getGasEstimate', ch.getGasEstimate());
+//	console.log('getGasEstimate', ch.getGasEstimate());
 
 
 	/// 1- Run below code to create a token */
@@ -159,13 +162,13 @@ function objToArr(obj) {
 
 
 	/// 2- new instance - setup event handling
-	// const tokenAddress = "0xf7ac20b5e31c1c11b21c0c165df516f0a60e83f0";
-	// const instance = ch.getInstanceByAddress(tokenAddress);
-	// var events = instance.allEvents();
-	// events.watch(function(error, result) {
-	// 	error && console.log('instance event error', error);
-	// 	result && console.log('instance event result', result);
-	// });
+	const tokenAddress = "0x28bcb6f3db8e85eb9e7572b674e45be9a25ae65e";
+	const instance = ch.getInstanceByAddress(tokenAddress);
+	var events = instance.allEvents();
+	events.watch(function(error, result) {
+		error && console.log('instance event error', error);
+		result && console.log('instance event result', result);
+	});
 
 
 	/// 2.1- Run below code to create a token sale contract*/
@@ -180,7 +183,7 @@ function objToArr(obj) {
 	// 	gilgameshToken: tokenAddress,
 	// 	minimumCap: 5 * 10 ** 18 // 30 ether
 	// }
-	//
+    //
 	// var paramsStr = {
 	// 	startBlock: 200,
 	// 	endBlock: 300,
@@ -193,9 +196,10 @@ function objToArr(obj) {
 	// 	minimumCap: '"' + 10 ** 18 * 30 + '"' // 30 ether
 	// };
 	// console.log('str:', objToArr(paramsStr).join(','))
-	//
+    //
 	// const deployContract = bluebird.promisify(ch2.deployContract, { context: ch });
 	// console.log("arr", objToArr(params));
+    //
 	// deployContract(objToArr(params), deployerAddress).then(data => {
 	// 	console.log("data", data);
 	// }).catch(e => {
@@ -204,33 +208,74 @@ function objToArr(obj) {
 
 
 	/// 2.2- new instance for tokensale - setup event handling
-	// const tokenSaleAddress = '0x6877df44406532767b6a5ed421a6bc46a7c352d9';
-	// const instanceTokenSale = ch2.getInstanceByAddress(tokenSaleAddress);
-	// var eventsTokenSale = instanceTokenSale.allEvents();
-	// eventsTokenSale.watch(function(error, result) {
-	// 	error && console.log('instance event error', error);
-	// 	result && console.log('instance event result', result);
-	// });
-	//
-	// console.log("instanceTokenSale.creationBlock", instanceTokenSale.creationBlock().toNumber());
+	const tokenSaleAddress = '0xbda3f448559f3f388c7d721aa55e4602fff167fa';
+	const instanceTokenSale = ch2.getInstanceByAddress(tokenSaleAddress);
+	var eventsTokenSale = instanceTokenSale.allEvents();
+	eventsTokenSale.watch(function(error, result) {
+		error && console.log('instance event error', error);
+		result && console.log('instance event result', result);
+	});
+
+	console.log("instanceTokenSale.creationBlock", instanceTokenSale.creationBlock().toNumber());
 
 
 	/// 3- Run below code to get instance by address - static function
-	// console.log('deployerAddress address', deployerAddress);
-	// console.log("Total Supply", toTokenNumber(instance.totalSupply()));
-	// console.log("admin Balance", toTokenNumber(instance.balanceOf(deployerAddress)));
-	// console.log("friend Balance", toTokenNumber(instance.balanceOf(friend)));
+	console.log('deployerAddress address', deployerAddress);
+	console.log("Total Supply", toTokenNumber(instance.totalSupply()));
+	console.log("admin Balance", toTokenNumber(instance.balanceOf(deployerAddress)));
+	console.log("friend Balance", toTokenNumber(instance.balanceOf(friend)));
 	// console.log("name", instance.name());
-	// console.log("symbol", instance.symbol());
-	// console.log("decimals", instance.decimals().toNumber());
-	// console.log("version", instance.version().toNumber());
-	// console.log("admin", instance.admin());
-	// console.log("minter", instance.minter());
-	// console.log("creationBlock", instance.creationBlock().toNumber());
-	// console.log("isTransferEnabled", instance.isTransferEnabled());
+	console.log("symbol", instance.symbol());
+	console.log("decimals", instance.decimals().toNumber());
+	console.log("version", instance.version().toNumber());
+	console.log("admin", instance.admin());
+	console.log("minter", instance.minter());
+	console.log("creationBlock", instance.creationBlock().toNumber());
+	console.log("isTransferEnabled", instance.isTransferEnabled());
+
+
+	console.log(instanceTokenSale.depositForMySelf.getData(123));
+
+	//console.log(instanceTokenSale.depositForMySelf.estimateGas());
+
+	// const source = fs.readFileSync('./aggregated.sol', 'utf8');
+	// const compiledContracts = solc.compile(source, 1);
+	// const compiledContract = compiledContracts.contracts[':' + 'GilgameshTokenSale'];
+    //
+	// // Application Binary Interface (ABI)
+	// const abiArray = JSON.parse(compiledContract.interface);
+    //
+	// var tokenSaleContract = web3.eth.contract(abiArray);
+	// console.log('tokenSaleContract', tokenSaleContract);
+	// var myCallData = tokenSaleContract.depositForMySelf.getData(123);
+	// console.log('myCallData', myCallData);
 
 	/// logging curl call
 	//ch.logCURL(instance.mint.getData(deployerAddress, genToken(1000)), deployerAddress);
+
+
+	/// change minter to tokenSaleAddress
+	// instance.changeMinter.sendTransaction(tokenSaleAddress, {
+	// 	from: deployerAddress,
+	// 	value: 0,
+	// 	gasPrice: web3.eth.gasPrice,
+	// 	gas: gasEstimate
+	// }, (err, result) => {
+	// 	console.log("changeMinter", err, result);
+	// }).then(()=> {}).catch(e => {
+	// 	console.log("e", e);
+	// })
+
+	// instanceTokenSale.depositForMySelf.sendTransaction(123, {
+	// 	from: deployerAddress,
+	// 	value: 10 * 10 ** 18,
+	// 	gasPrice: web3.eth.gasPrice,
+	// 	gas: gasEstimate
+	// }, (err, result) => {
+	// 	console.log("depositForMySelf", err, result);
+	// })
+
+
 
 	/// 4- minting transaction call - state changing function
 	// instance.mint.sendTransaction(deployerAddress, genToken(1000), {
