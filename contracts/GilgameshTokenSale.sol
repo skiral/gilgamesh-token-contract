@@ -54,6 +54,15 @@ contract GilgameshTokenSale is SafeMath{
 	// this will get generated in the constructor
 	uint[] public stageBonusPercentage;
 
+	// number of participants
+	uint256 public totalParticipants;
+
+	// a map of userId to wei
+	mapping(uint256 => uint256) public paymentsByUserId;
+
+	// a map of user address to wei
+	mapping(address => uint256) public paymentsByAddress;
+
 	// total number of bonus stages.
 	uint8 public totalStages;
 
@@ -84,9 +93,11 @@ contract GilgameshTokenSale is SafeMath{
 	// log each contribution
 	event LogContribution(
 		address contributorAddress,
+		address invokerAddress,
 		uint256 amount,
 		uint256 totalRaised,
-		uint256 userAssignedTokens
+		uint256 userAssignedTokens,
+		uint256 userId
 	);
 
 	// log when crowd fund is finalized
@@ -178,6 +189,8 @@ contract GilgameshTokenSale is SafeMath{
 	only_during_sale_period
 	only_sale_stopped
 	onlyOwner {
+		// if sale is finalized fail
+		if (saleFinalized) revert();
 		saleStopped = false;
 	}
 
@@ -247,18 +260,33 @@ contract GilgameshTokenSale is SafeMath{
 	/// Payable is a required solidity modifier to receive ether
 	/// every contract only has one unnamed function
 	/// 2300 gas available for this function
-	function () public payable {
+	/*function () public payable {
 		return deposit();
+	}*/
+
+	/**
+	* Pay on a behalf of the sender.
+	*
+	* @param customerId Identifier in the central database, UUID v4
+	*
+	*/
+	/// @dev allow purchasers to deposit ETH for GIL Tokens.
+	function depositForMySelf(uint256 userId)
+	public
+	only_sale_active
+	minimum_contribution()
+	payable {
+		deposit(userId, msg.sender);
 	}
 
-	///	@dev deposit() is an internal function that sends the ether that this
-	///	contract receives to the gilgameshFund and creates tokens in the address of the
-	function deposit()
+	///	@dev deposit() is an public function that accepts a userId and userAddress
+	///	contract receives ETH in return of GIL tokens
+	function deposit(uint256 userId, address userAddress)
 	public
 	payable
 	only_sale_active
 	minimum_contribution()
-	validate_address(msg.sender) {
+	validate_address(userAddress) {
 		// if it passes hard cap throw
 		if (totalRaised + msg.value > hardCap) revert();
 
@@ -274,7 +302,7 @@ contract GilgameshTokenSale is SafeMath{
 		if (!fundOwnerWallet.send(msg.value)) revert();
 
 		// mint tokens for the user
-		if (!token.mint(msg.sender, userAssignedTokens)) revert();
+		if (!token.mint(userAddress, userAssignedTokens)) revert();
 
 		// save total number wei raised
 		totalRaised = safeAdd(totalRaised, msg.value);
@@ -284,29 +312,38 @@ contract GilgameshTokenSale is SafeMath{
 			isCapReached = true;
 		}
 
-		// if token supply has exceeded token cap stop
+		// if token supply has exceeded or reached the token cap stop
 		if (token.totalSupply() >= tokenCap) {
 			isCapReached = true;
 		}
 
+		// increase the number of participants for the first transaction
+		if (paymentsByUserId[userId] == 0) {
+			totalParticipants++;
+		}
+
+		// increase the amount that the user has payed
+		paymentsByUserId[userId] += msg.value;
+
+		// total wei based on address
+		paymentsByAddress[userAddress] += msg.value;
+
 		// log contribution event
 		LogContribution(
+			userAddress,
 			msg.sender,
 			msg.value,
 			totalRaised,
-			userAssignedTokens
+			userAssignedTokens,
+			userId
 		);
 	}
-
-	// --------------
-	// Internal Funtions
-	// --------------
 
 	/// @notice calculate number tokens need to be issued based on the amount received
 	/// @param amount number of wei received
 	function calculateTokens(uint256 amount)
+	public
 	view
-	internal
 	returns (uint256) {
 		// return 0 if the crowd fund has ended or it hasn't started
 		if (!isDuringSalePeriod(getBlockNumber())) return 0;
@@ -329,7 +366,7 @@ contract GilgameshTokenSale is SafeMath{
 	/// @param amount number tokens that will be minted for the investor
 	/// @param stageNumber number of current stage in the crowd fund process
 	function calculateRewardTokens(uint256 amount, uint8 stageNumber)
-	internal
+	public
 	view
 	returns (uint256 rewardAmount) {
 		// throw if it's invalid stage number
@@ -348,8 +385,8 @@ contract GilgameshTokenSale is SafeMath{
 	/// @notice get crowd fund stage by block number
 	/// @param _blockNumber block number
 	function getStageByBlockNumber(uint256 _blockNumber)
+	public
 	view
-	internal
 	returns (uint8) {
 		// throw error, if block number is out of range
 		if (!isDuringSalePeriod(_blockNumber)) revert();
@@ -360,6 +397,10 @@ contract GilgameshTokenSale is SafeMath{
 		// since numbers round down we need to add one to number of stage
 		return uint8(safeDiv(safeMul(totalStages, numOfBlockPassed), totalBlocks) + 1);
 	}
+
+	// --------------
+	// Internal Funtions
+	// --------------
 
 	/// @notice check if the block number is during the sale period
 	/// @param _blockNumber block number
