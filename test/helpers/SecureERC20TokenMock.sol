@@ -1,7 +1,7 @@
 /*
 	Copyright 2017, Skiral Inc
 */
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "../../contracts/SecureERC20Token.sol";
 
