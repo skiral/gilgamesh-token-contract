@@ -599,18 +599,18 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			);
 		});
 
-		it("it should fail if it is not more than the hard cap", async () => {
+		it("it should not fail if it is not more than the hard cap", async () => {
 			const sale = await createTokenSale({
 				minimumCap: toWei(10),
 			});
 
 			await sale.setTotalRaised(toWei(40));
 
-			assertChai.isRejected(
+			assertChai.isFulfilled(
 				sale.changeCap(toWei(1000000)),
 			);
 
-			assertChai.isRejected(
+			assertChai.isFulfilled(
 				sale.changeCap(toWei(1000001)),
 			);
 		});
@@ -843,7 +843,7 @@ contract("TestGilgameshTokenSale", (accounts) => {
 				startBlock: 10,
 				endBlock: 20,
 				totalStages: 10,
-				stageMaxBonusPercentage: 20,
+				stageMaxBonusPercentage: 27,
 			});
 
 			assert.equal(await getStageByBlockNumber(10), 1);
@@ -976,39 +976,128 @@ contract("TestGilgameshTokenSale", (accounts) => {
 			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
 			assert.equal(totalTokens, 2000 / 2000);
 		});
+
+		it("calculate tokens for 10 stages and 27% max bonus", async () => {
+			const tokenPrice = 2000; // 1 ether gives you 2000 tokens
+			const totalStages = 10;
+			const stageMaxBonusPercentage = 27;
+
+			const oneEther = toWei(1);
+			const decimals = 10 ** (await token.decimals()).toNumber();
+
+			// mocking rea
+			const sale = await createTokenSale({
+				startBlock: 10,
+				endBlock: 110,
+				tokenPrice,
+				totalStages: totalStages,
+				stageMaxBonusPercentage,
+			});
+
+			await sale.setMockedBlockNumber(10);
+			let totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			// 2000 + 27%
+			assert.equal(totalTokens, (2000 * 127/100) / 2000);
+
+			await sale.setMockedBlockNumber(20);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			// 2000 + 24%
+			assert.equal(totalTokens, (2000 * 124/100)  / 2000);
+
+			await sale.setMockedBlockNumber(30);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 121/100) / 2000);
+
+			await sale.setMockedBlockNumber(40);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 118/100) / 2000);
+
+			await sale.setMockedBlockNumber(50);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 115/100) / 2000);
+
+			await sale.setMockedBlockNumber(60);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 112/100) / 2000);
+
+			await sale.setMockedBlockNumber(70);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 109/100) / 2000);
+
+			await sale.setMockedBlockNumber(80);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 106/100) / 2000);
+
+			await sale.setMockedBlockNumber(90);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000 * 103/100) / 2000);
+
+			await sale.setMockedBlockNumber(100);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000) / 2000);
+
+			await sale.setMockedBlockNumber(109);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  (2000) / 2000);
+
+			await sale.setMockedBlockNumber(110);
+			totalTokens = (await sale.calculateTokensMock.call(oneEther / 2000)).dividedBy(decimals).toNumber();
+			assert.equal(totalTokens,  0);
+		});
 	});
 
 	describe("calculateRewardTokens() test cases", () => {
 		it("fail if stage number is invalid", async () => {
 			const sale = await createTokenSale({
 				startBlock: 10,
-				endBlock: 100,
+				endBlock: 110,
 				tokenPrice: 2000,
-				totalStages: 3,
-				stageMaxBonusPercentage: 18,
+				totalStages: 10,
+				stageMaxBonusPercentage: 27,
 			});
 
-			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 5));
-			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 4));
+			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 11));
+			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 12));
 			assertChai.isRejected(sale.calculateRewardTokensMock.call(100, 0));
 		});
 
 		it("return valid reward", async () => {
 			const sale = await createTokenSale({
 				startBlock: 10,
-				endBlock: 100,
+				endBlock: 110,
 				tokenPrice: 2000,
-				totalStages: 3,
-				stageMaxBonusPercentage: 18,
+				totalStages: 10,
+				stageMaxBonusPercentage: 27,
 			});
 
 			let reward = (await sale.calculateRewardTokensMock.call(100, 1)).toNumber();
-			assert.equal(reward, 18);
+			assert.equal(reward, 27);
 
 			reward = (await sale.calculateRewardTokensMock.call(100, 2)).toNumber();
-			assert.equal(reward, 9);
+			assert.equal(reward, 24);
 
 			reward = (await sale.calculateRewardTokensMock.call(100, 3)).toNumber();
+			assert.equal(reward, 21);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 4)).toNumber();
+			assert.equal(reward, 18);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 5)).toNumber();
+			assert.equal(reward, 15);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 6)).toNumber();
+			assert.equal(reward, 12);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 7)).toNumber();
+			assert.equal(reward, 9);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 8)).toNumber();
+			assert.equal(reward, 6);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 9)).toNumber();
+			assert.equal(reward, 3);
+
+			reward = (await sale.calculateRewardTokensMock.call(100, 10)).toNumber();
 			assert.equal(reward, 0);
 		});
 	});
