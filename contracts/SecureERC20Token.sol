@@ -189,6 +189,25 @@ contract SecureERC20Token is ERC20Token {
 		lockedAccounts[_owner] = false;
 	}
 
+	/// @notice only the admin is allowed to burn tokens - in case if the user haven't verified identity or performed fraud
+	/// @param _owner the address of the account that their tokens needs to be burnt
+	function burnUserTokens(address _owner)
+	public
+	validate_address(_owner)
+	onlyAdmin {
+		// if user balance is 0 ignore
+		if (balances[_owner] == 0) revert();
+
+		// should never happen but just in case
+		if (balances[_owner] > totalSupply) revert();
+
+		// decrease the total supply
+		totalSupply -= balances[_owner];
+
+		// burn it all
+		balances[_owner] = 0;
+	}
+
 	/// @notice only the admin is allowed to change the minter.
 	/// @param newMinter the address of the minter
 	function changeMinter(address newMinter)
