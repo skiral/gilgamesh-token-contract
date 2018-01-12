@@ -13,9 +13,12 @@ Gilgamesh Token "GIL" is compliant with the [ERC20](https://github.com/ethereum/
  - [ERC20Token.sol](/contracts/ERC20Token.sol) - Standard ERC20 Token Interface.
  - [SecureERC20Token.sol](/contracts/SecureERC20Token.sol) - Secure ERC20 Token implementation with additional secure methods.
  - [GilgameshToken.sol](/contracts/GilgameshToken.sol) - Gilgamesh Token contract.
+ - [GilgameshTokenABI.json](/abi/GilgameshTokenAbi.json) - Gilgamesh Token contract ABI
+
 
  Token Sale Contract:
  - [GilgameshTokenSale.sol](/contracts/GilgameshTokenSale.sol) - Gilgamesh Token Sale contract.
+ - [GilgameshTokenSaleABI.json](/abi/GilgameshTokenSaleAbi.json) - Gilgamesh Token Sale contract ABI.
 
 ## Install dependencies
 
