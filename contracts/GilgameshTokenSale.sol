@@ -31,13 +31,13 @@ contract GilgameshTokenSale is SafeMath{
 	uint256 constant public minimumInvestment = 100 finney;
 
 	// Maximum hard Cap
-	uint256 public hardCap = 66666 ether;
+	uint256 public hardCap = 50000 ether;
 
 	// number of wei GIL tokens for sale - 60 Million GIL Tokens
 	uint256 public tokenCap = 60000000 * 10**18;
 
 	// Minimum cap
-	uint256 public minimumCap = 1667 ether;
+	uint256 public minimumCap = 1250 ether;
 
 	/* Contract Info */
 
